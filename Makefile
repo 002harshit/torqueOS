@@ -1,40 +1,44 @@
-all: set_grub torque.iso
+TOOLCHAIN ?=$(HOME)/opt/cross_i386-elf/bin/i386-elf-
+CC=$(TOOLCHAIN)gcc
+LD=$(TOOLCHAIN)ld
 
-CROSS_COMPILER_PREFIX?=$(HOME)/opt/cross_i386-elf/bin/i386-elf-
-GCC=$(CROSS_COMPILER_PREFIX)gcc
-LD=$(CROSS_COMPILER_PREFIX)ld
+TARGET=torque
 
-kernel_loader.o: kernel_loader.asm
-	yasm -f elf32 kernel_loader.asm -o kernel_loader.o
+OBJS = \
+kernel/loader.o \
+kernel/test.o kernel/io.o \
+driver/framebuffer.o \
+driver/serial.o \
+common/printf.o
 
-test.o: test.c
-	$(GCC) -c test.c -O3
+HEADERS = \
+kernel/io.h \
+driver/framebuffer.h \
+driver/serial.h
 
-framebuffer.o: driver/framebuffer.c
-	$(GCC) -c driver/framebuffer.c -O3
+CFLAGS =
+CFLAGS += -std=gnu99 -ffreestanding -O2 -Wall -Wextra -Werror
+CFLAGS += -I./
+CFLAGS +=-masm=intel
 
-serial.o: driver/serial.c
-	$(GCC) -c driver/serial.c -O3
+all: $(TARGET).iso
 
+%.o: %.c $(HEADERS)
+	$(CC) $(CFLAGS) -c $< -o $@
 
-printf.o: lib/printf.c
-	$(GCC) -c lib/printf.c -O3
+%.o: %.asm
+	yasm -f elf32 $< -o $@
 
-io.o: io.c
-	$(GCC) -c io.c -masm=intel -O3
+$(TARGET).elf: $(OBJS) kernel/linker.ld
+	$(LD) -T kernel/linker.ld -melf_i386 $(OBJS) -o $(TARGET).elf
 
-kernel.elf: kernel_loader.o linker.ld test.o io.o framebuffer.o printf.o serial.o
-	$(LD) -T linker.ld -melf_i386 kernel_loader.o test.o framebuffer.o printf.o serial.o io.o -o kernel.elf
-
-set_grub: iso/boot/grub
-
-iso/boot/grub: stage2_eltorito menu.lst
+iso/boot/grub/stage2_eltorito iso/boot/grub/menu.lst: stage2_eltorito menu.lst
 	mkdir -p iso/boot/grub
 	cp stage2_eltorito iso/boot/grub
 	cp menu.lst iso/boot/grub
 
-torque.iso: kernel.elf
-	cp kernel.elf iso/boot
+$(TARGET).iso: $(TARGET).elf iso/boot/grub/stage2_eltorito iso/boot/grub/menu.lst
+	cp $(TARGET).elf iso/boot
 	genisoimage -R                  \
 	-b boot/grub/stage2_eltorito    \
 	-no-emul-boot                   \
@@ -43,13 +47,13 @@ torque.iso: kernel.elf
 	-input-charset utf8             \
 	-quiet                          \
 	-boot-info-table                \
-	-o torque.iso                   \
+	-o $(TARGET).iso                \
 	iso
 
-bochs: torque.iso bochsrc.txt
+bochs: $(TARGET).iso bochsrc.txt
 	bochs -f bochsrc.txt -q
 
 clean:
-	rm -rf *.o kernel.elf *.iso iso
+	rm -rf $(OBJS) $(TARGET).elf $(TARGET).iso com1.out bochslog.txt bx_enh_dbg.ini *.s *.o *.out *.elf *.iso iso/
 	
 .PHONY: clean bochs
