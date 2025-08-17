@@ -5,8 +5,9 @@ LD=$(TOOLCHAIN)ld
 TARGET=torque
 
 OBJS = \
-kernel/loader.o \
-kernel/test.o kernel/io.o \
+kernel/loader.s.o \
+kernel/test.o \
+kernel/io.o \
 driver/framebuffer.o \
 driver/serial.o \
 common/printf.o
@@ -26,7 +27,7 @@ all: $(TARGET).iso
 %.o: %.c $(HEADERS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-%.o: %.asm
+%.s.o: %.asm
 	yasm -f elf32 $< -o $@
 
 $(TARGET).elf: $(OBJS) kernel/linker.ld
