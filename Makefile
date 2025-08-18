@@ -6,7 +6,9 @@ TARGET=torque
 
 OBJS = \
 kernel/loader.s.o \
-kernel/test.o \
+kernel/kmain.o \
+kernel/gdt.s.o \
+kernel/gdt.o \
 kernel/io.o \
 driver/framebuffer.o \
 driver/serial.o \
@@ -14,6 +16,7 @@ common/printf.o
 
 HEADERS = \
 kernel/io.h \
+kernel/gdt.h \
 driver/framebuffer.h \
 driver/serial.h
 

@@ -17,13 +17,13 @@ align 4
     dd FLAGS
     dd CHECK_SUM
 
-extern demo
+extern kmain
 
 kernel_loader:
   mov esp, kernel_stack + KERNEL_STACK_SIZE
-  mov eax, 0xCafeBabe
+  ;mov eax, 0xCafeBabe
   ;xchg bx, bx
-  call demo
+  call kmain
 
 .loop:
     jmp .loop

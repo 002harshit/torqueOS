@@ -1,5 +1,7 @@
 #include "driver/serial.h"
 #include "driver/framebuffer.h"
+#include "kernel/gdt.h"
+
 int threesome(int a, int b, int c) {
 	return a + b + c;
 }
@@ -8,6 +10,7 @@ void lib_printf(const char* fmt, ...);
 
 void demo()
 {
+  gdt_init();
 ///	char* message = "HelloWorld";
 	// serial_init();
   fb_clear_screen();
