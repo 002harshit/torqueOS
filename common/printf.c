@@ -1,17 +1,10 @@
-#include "../driver/serial.h"
-#include "../driver/framebuffer.h"
-#define va_start __builtin_va_start
-#define va_end __builtin_va_end
-#define va_arg __builtin_va_arg
-#define va_list __builtin_va_list
+#include "lib.h"
 
-static void lib_putchar(char c)
-{
-  fb_write(c);
-  // serial_write(c);
-}
+#define PRINTF_FLOAT_PRECISION 100000000
 
-static void lib_puts(char* buf)
+extern void lib_putchar(char c);
+
+void lib_puts(char* buf)
 {
   char* p = buf;
   while (*p != '\0') {
@@ -45,11 +38,6 @@ static void print_hex(unsigned int v, const char* symbols)
     lib_putchar(buffer[i]);
   }
 }
-
-// orintf
-// support 'c': char, 's': char*, 'd': int, 'u': unsigend int, 'f': float, 'h': hex uint, 'b': hex uint
-
-#define PRINTF_FLOAT_PRECISION 100000000
 
 void lib_printf(const char* fmt, ...)
 {

@@ -1,4 +1,5 @@
 #include "kernel/io.h"
+#include "framebuffer.h"
 
 #define COMMAND_PORT 0x3D4
 #define DATA_PORT 0x3D5
