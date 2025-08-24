@@ -9,7 +9,10 @@ kernel/loader.s.o \
 kernel/kmain.o \
 kernel/gdt.s.o \
 kernel/gdt.o \
+kernel/idt.s.o \
+kernel/idt.o \
 kernel/io.o \
+kernel/scancode.o \
 driver/framebuffer.o \
 driver/serial.o \
 common/printf.o
@@ -17,6 +20,8 @@ common/printf.o
 HEADERS = \
 kernel/io.h \
 kernel/gdt.h \
+kernel/idt.h \
+kernel/scancode.h \
 driver/framebuffer.h \
 driver/serial.h
 
