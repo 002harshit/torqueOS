@@ -1,5 +1,5 @@
 megs:            32
-display_library: x
+display_library: sdl2
 romimage:        file=/usr/share/bochs/BIOS-bochs-latest
 vgaromimage:     file=/usr/share/seabios/vgabios.bin
 ata0-master:     type=cdrom, path=torque.iso, status=inserted
@@ -9,3 +9,4 @@ clock:           sync=realtime, time0=local
 cpu:             count=1, ips=1000000
 magic_break: enabled=1
 com1: enabled=1, mode=file, dev=com1.out
+keyboard: type=mf, serial_delay=250
