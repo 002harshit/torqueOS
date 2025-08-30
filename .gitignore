@@ -3,6 +3,7 @@
 *.out
 *.elf
 *.iso
+*.qcow2
 iso/*
 bochslog.txt
 bx_enh_dbg.ini

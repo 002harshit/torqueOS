@@ -26,9 +26,11 @@ driver/framebuffer.h \
 driver/serial.h
 
 CFLAGS =
-CFLAGS += -std=gnu99 -ffreestanding -O2 -Wall -Wextra -Werror
+CFLAGS += -std=gnu99 -ffreestanding -O2 -Wall -Wextra -Werror -g
 CFLAGS += -I./
 CFLAGS +=-masm=intel
+
+QEMU_IMG = qemu_disk.qcow2
 
 all: $(TARGET).iso
 
@@ -62,7 +64,21 @@ $(TARGET).iso: $(TARGET).elf iso/boot/grub/stage2_eltorito iso/boot/grub/menu.ls
 bochs: $(TARGET).iso bochsrc.txt
 	bochs -f bochsrc.txt -q
 
+$(QEMU_IMG):
+	qemu-img create -f qcow2 $(QEMU_IMG) 1G
+
+qemu: $(TARGET).iso $(QEMU_IMG)
+	qemu-system-i386 \
+	-m 1G \
+	-smp 2 \
+	-boot d \
+	-cdrom $(TARGET).iso \
+	-drive file=$(QEMU_IMG),format=qcow2 \
+	-netdev user,id=net0,hostfwd=tcp::2222-:22 \
+	-device e1000,netdev=net0 \
+	-display default,show-cursor=on
+
 clean:
 	rm -rf $(OBJS) $(TARGET).elf $(TARGET).iso com1.out bochslog.txt bx_enh_dbg.ini *.s *.o *.out *.elf *.iso iso/
 	
-.PHONY: clean bochs
+.PHONY: clean bochs qemu
