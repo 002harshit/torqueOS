@@ -16,11 +16,17 @@ static unsigned short cursor_pos = 0;
 
 void fb_move(unsigned short pos)
 {
+  cursor_pos = pos;
   outb(COMMAND_PORT, HIGH_BYTE_COMMAND);
   outb(DATA_PORT, ((pos >> 8) & 0x00FF));
 
   outb(COMMAND_PORT, LOW_BYTE_COMMAND);
   outb(DATA_PORT, pos & 0x00FF);
+}
+
+unsigned short fb_cursor()
+{
+  return cursor_pos;
 }
 
 void fb_write_cell(unsigned int i, char c, unsigned short color)
@@ -32,7 +38,7 @@ void fb_write_cell(unsigned int i, char c, unsigned short color)
 void fb_clear_screen()
 {
   for (int i = 0; i < 80 * 25; i++) {
-    fb_write_cell(i*2, ' ', 0x00);
+    fb_write_cell(i*2, ' ', 0x0F);
   }
 }
 
@@ -56,13 +62,13 @@ void fb_scroll()
 void fb_write(char c)
 {
 	if (c == '\n') {
-	cursor_pos = (cursor_pos / 80 + 1) * 80;
+	  cursor_pos = (cursor_pos / 80 + 1) * 80;
 	  while (cursor_pos >= FB_SIZE) {
 	    fb_scroll();
 	    cursor_pos -= FB_WIDTH;
 	  }
 	} else {
-	fb_write_cell(cursor_pos * 2, c, 0x0F);
+    fb_write_cell(cursor_pos * 2, c, 0x0F);
 	  cursor_pos++;
 	  if (cursor_pos == FB_SIZE) {
 	    fb_scroll();
