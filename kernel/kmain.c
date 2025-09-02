@@ -60,6 +60,11 @@ void kmain()
   gdt_init();
   idt_init();
   paging_init();
+
+  char *ptr = (char*)0xA0000000; // some random address
+  char test_page_fault = *ptr;
+  lib_printf("failed to do page fault: %c\n", test_page_fault);
+
   draw_torque_os_logo();
   lib_printf("\n\n");
   for (int i = 0; i < 80; i++) {

@@ -1,4 +1,5 @@
 #include "paging.h"
+#include "driver/framebuffer.h"
 
 #define PAGE_DIRECTORY_SIZE 1024
 #define PAGE_ENTRY_SIZE 1024
@@ -23,10 +24,13 @@ void paging_init()
   page_directory[0] = ((unsigned int) current_page) | 0x3;
 
   set_paging(page_directory);
-
-
-
 }
 
-
+void on_page_fault()
+{
+  char msg[] = "Page Fault\n";
+  for (int i = 0; msg[i]; i++) {
+    fb_write(msg[i]);
+  }
+}
 

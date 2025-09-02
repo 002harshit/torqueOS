@@ -63,12 +63,16 @@ void pic_remap(int offset1, int offset2){
 }
 
 extern void on_keyboard_interrupt();
+extern void on_page_fault();
 
 void interrupt_handler(__attribute__((unused)) struct CpuState cpu, unsigned int interrupt, __attribute__((unused)) struct StackState stack)
 {
   switch (interrupt) {
     case PIC_1_INTERRUPT(1): {
       on_keyboard_interrupt();
+    } break;
+    case 14: {
+      on_page_fault();
     } break;
   }
   pic_acknowledge(interrupt);
@@ -87,12 +91,14 @@ static void set_idt(int index, unsigned int offset, unsigned char flags, unsigne
 
 /* PIC_1_OFFSET + 1 = 33 */
 extern void interrupt_handler_33();
+extern void interrupt_handler_14();
 
 static struct Idt idt;
 
 void idt_init()
 {
-  set_idt(PIC_1_INTERRUPT(1), (unsigned int) interrupt_handler_33, IDT_FLAGS, 0x08);
+  set_idt(33, (unsigned int) interrupt_handler_33, IDT_FLAGS, 0x08);
+  set_idt(14, (unsigned int) interrupt_handler_14, IDT_FLAGS, 0x08);
 
   idt.address = (unsigned int ) &idt_descriptors;
   idt.size = sizeof(struct IdtDescriptor) * IDT_DESCRIPTORS_COUNT;
