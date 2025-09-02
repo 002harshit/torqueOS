@@ -16,6 +16,7 @@
 #include "io.h"
 #include "gdt.h"
 #include "idt.h"
+#include "paging.h"
 #include "scancode.h"
 #include "common/lib.h"
 #include "driver/framebuffer.h"
@@ -58,6 +59,7 @@ void kmain()
 {
   gdt_init();
   idt_init();
+  paging_init();
   draw_torque_os_logo();
   lib_printf("\n\n");
   for (int i = 0; i < 80; i++) {

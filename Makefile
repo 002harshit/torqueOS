@@ -11,6 +11,8 @@ kernel/gdt.s.o \
 kernel/gdt.o \
 kernel/idt.s.o \
 kernel/idt.o \
+kernel/paging.s.o \
+kernel/paging.o \
 kernel/io.o \
 kernel/scancode.o \
 driver/framebuffer.o \
@@ -21,6 +23,7 @@ HEADERS = \
 kernel/io.h \
 kernel/gdt.h \
 kernel/idt.h \
+kernel/paging.h \
 kernel/scancode.h \
 driver/framebuffer.h \
 driver/serial.h
@@ -76,7 +79,7 @@ qemu: $(TARGET).iso $(QEMU_IMG)
 	-drive file=$(QEMU_IMG),format=qcow2 \
 	-netdev user,id=net0,hostfwd=tcp::2222-:22 \
 	-device e1000,netdev=net0 \
-	-display default,show-cursor=on
+	-display default,show-cursor=on \
 
 clean:
 	rm -rf $(OBJS) $(TARGET).elf $(TARGET).iso com1.out bochslog.txt bx_enh_dbg.ini *.s *.o *.out *.elf *.iso iso/
