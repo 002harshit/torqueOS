@@ -56,18 +56,22 @@ void pic_remap(int offset1, int offset2){
 	outb(PIC_2_DATA, PIC_ICW4_8086);
 
 	// Setup Interrupt Mask Register (IMR)
-	outb(PIC_1_DATA, 0xFD);
+	outb(PIC_1_DATA, 0b11111100);
 	outb(PIC_2_DATA, 0xFF);
 
 	__asm__("sti");
 }
 
+extern void on_timer_interrupt();
 extern void on_keyboard_interrupt();
 extern void on_page_fault();
 
 void interrupt_handler(__attribute__((unused)) struct CpuState cpu, unsigned int interrupt, __attribute__((unused)) struct StackState stack)
 {
   switch (interrupt) {
+    case PIC_1_INTERRUPT(0): {
+      on_timer_interrupt();
+    } break;
     case PIC_1_INTERRUPT(1): {
       on_keyboard_interrupt();
     } break;
@@ -91,12 +95,14 @@ static void set_idt(int index, unsigned int offset, unsigned char flags, unsigne
 
 /* PIC_1_OFFSET + 1 = 33 */
 extern void interrupt_handler_33();
+extern void interrupt_handler_32();
 extern void interrupt_handler_14();
 
 static struct Idt idt;
 
 void idt_init()
 {
+  set_idt(32, (unsigned int) interrupt_handler_32, IDT_FLAGS, 0x08);
   set_idt(33, (unsigned int) interrupt_handler_33, IDT_FLAGS, 0x08);
   set_idt(14, (unsigned int) interrupt_handler_14, IDT_FLAGS, 0x08);
 

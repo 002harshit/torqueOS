@@ -56,8 +56,10 @@ common_interrupt_handler:
 
 	iret
 
+%define INTERRUPT_TIMER 32
 %define INTERRUPT_KEYBOARD 33
 %define INTERRUPT_PAGING 14
 
+no_error_interrupt_handler INTERRUPT_TIMER
 no_error_interrupt_handler INTERRUPT_KEYBOARD
 error_interrupt_handler INTERRUPT_PAGING
