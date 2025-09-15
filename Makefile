@@ -17,6 +17,7 @@ kernel/io.o \
 kernel/scancode.o \
 driver/framebuffer.o \
 driver/serial.o \
+driver/timer.o \
 common/printf.o
 
 HEADERS = \
@@ -26,7 +27,9 @@ kernel/idt.h \
 kernel/paging.h \
 kernel/scancode.h \
 driver/framebuffer.h \
-driver/serial.h
+driver/serial.h \
+driver/timer.h \
+
 
 CFLAGS =
 CFLAGS += -std=gnu99 -ffreestanding -O2 -Wall -Wextra -Werror -g

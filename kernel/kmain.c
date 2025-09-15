@@ -20,6 +20,7 @@
 #include "scancode.h"
 #include "common/lib.h"
 #include "driver/framebuffer.h"
+#include "driver/timer.h"
 
 void lib_putchar(char c)
 {
@@ -56,7 +57,8 @@ int ticks = 0;
 int is_falling = 0;
 int pos = 19 * 80 + 38;
 int prev = 19 * 80 + 38;
-void on_timer_interrupt()
+
+void update_callback()
 {
   static const char player_fall[] = {
   ' ', 'o', ' ',
@@ -93,7 +95,8 @@ void on_timer_interrupt()
     fb_move(pos + c + r * 80);
     fb_write(sprite[k]);
   }
-
+  fb_move(0);
+  lib_printf("%d", timer_get_elapsed());
 }
 void on_keyboard_interrupt()
 {
@@ -105,21 +108,12 @@ void on_keyboard_interrupt()
   if (code == 0x1f) pos += 80;
 }
 
-void timer_init(int frequency)
-{
-  unsigned int divisor = 1193180 / frequency;
-  unsigned char l = divisor & 0xFF;
-  unsigned char r = (divisor >> 8) & 0xFF;
-
-  outb(0x43, 0x36);
-  outb(0x40, l);
-  outb(0x40, r);
-}
-
 void kmain()
 {
   gdt_init();
   idt_init();
   paging_init();
-  timer_init(62);
+
+  timer_set_callback(update_callback);
+  timer_start(62);
 }
