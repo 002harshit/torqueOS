@@ -14,10 +14,10 @@ kernel/idt.o \
 kernel/paging.s.o \
 kernel/paging.o \
 kernel/io.o \
-kernel/scancode.o \
 driver/framebuffer.o \
 driver/serial.o \
 driver/timer.o \
+driver/keyboard.o \
 common/printf.o
 
 HEADERS = \
@@ -25,10 +25,10 @@ kernel/io.h \
 kernel/gdt.h \
 kernel/idt.h \
 kernel/paging.h \
-kernel/scancode.h \
 driver/framebuffer.h \
 driver/serial.h \
 driver/timer.h \
+driver/keyboard.h
 
 
 CFLAGS =

@@ -17,10 +17,10 @@
 #include "gdt.h"
 #include "idt.h"
 #include "paging.h"
-#include "scancode.h"
 #include "common/lib.h"
 #include "driver/framebuffer.h"
 #include "driver/timer.h"
+#include "driver/keyboard.h"
 
 void lib_putchar(char c)
 {
@@ -57,8 +57,9 @@ int ticks = 0;
 int is_falling = 0;
 int pos = 19 * 80 + 38;
 int prev = 19 * 80 + 38;
+unsigned char last_keycode = 0;
 
-void update_callback()
+void demo_update_callback()
 {
   static const char player_fall[] = {
   ' ', 'o', ' ',
@@ -76,6 +77,11 @@ void update_callback()
     draw_torque_os_logo();
     is_falling = !is_falling;
   }
+
+  fb_move(0);
+  lib_printf("KEYCODE: %x  IS_RELEASED: %d  ", last_keycode, last_keycode > 0x80);
+  lib_printf("SHIFT: %d  CTRL: %d  ALT: %d\n", kb_is_key_pressed(0x2a), kb_is_key_pressed(0x1d), kb_is_key_pressed(0x38));
+  lib_printf("TICK: %d", timer_get_elapsed());
   
   const char* sprite = player_jump;
   if (is_falling) sprite = player_fall;
@@ -95,13 +101,14 @@ void update_callback()
     fb_move(pos + c + r * 80);
     fb_write(sprite[k]);
   }
-  fb_move(0);
-  lib_printf("%d", timer_get_elapsed());
-}
-void on_keyboard_interrupt()
+ }
+
+void demo_key_callback(unsigned char code, char is_released)
 {
+  fb_move(22 * 80 + 10);
+  last_keycode = code;
   prev = pos;
-  unsigned char code = inb(0x60);
+  if (is_released) return;
   if (code == 0x1e) pos -= 1;
   if (code == 0x20) pos += 1;
   if (code == 0x11) pos -= 80;
@@ -115,6 +122,11 @@ void kmain()
   paging_init();
 
   timer_stop();
-  timer_set_callback(update_callback);
+  timer_set_callback(demo_update_callback);
   timer_start(62);
+
+  draw_torque_os_logo();
+  lib_printf("\n");
+  kb_init();
+  kb_set_callback(demo_key_callback);
 }
