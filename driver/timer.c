@@ -33,6 +33,9 @@ void on_timer_interrupt()
 void timer_stop()
 {
   delta_ms = 0;
+  outb(0x43, 0x30);
+  outb(0x40, 0);
+  outb(0x40, 0);
 }
 
 unsigned long timer_get_elapsed()

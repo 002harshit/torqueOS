@@ -114,6 +114,7 @@ void kmain()
   idt_init();
   paging_init();
 
+  timer_stop();
   timer_set_callback(update_callback);
   timer_start(62);
 }
