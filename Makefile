@@ -1,5 +1,6 @@
 TOOLCHAIN ?=$(HOME)/opt/cross_i386-elf/bin/i386-elf-
 CC=$(TOOLCHAIN)gcc
+AS=$(TOOLCHAIN)as
 LD=$(TOOLCHAIN)ld
 
 TARGET=torque
@@ -19,6 +20,9 @@ driver/serial.o \
 driver/timer.o \
 driver/keyboard.o \
 common/printf.o
+
+LIBCRANK_SOURCES = $(wildcard libcrank/*.c libcrank/*/*.c)
+LIBCRANK_OBJS = $(LIBCRANK_SOURCES:.c=.o)
 
 HEADERS = \
 kernel/io.h \
@@ -46,13 +50,16 @@ all: $(TARGET).iso
 %.s.o: %.asm
 	yasm -f elf32 $< -o $@
 
-$(TARGET).elf: $(OBJS) kernel/linker.ld
-	$(LD) -T kernel/linker.ld -melf_i386 $(OBJS) -o $(TARGET).elf
+$(TARGET).elf: $(OBJS) kernel/linker.ld $(LIBCRANK_OBJS)
+	$(LD) -T kernel/linker.ld -melf_i386 $(OBJS) $(LIBCRANK_OBJS) -o $(TARGET).elf
 
 iso/boot/grub/stage2_eltorito iso/boot/grub/menu.lst: stage2_eltorito menu.lst
 	mkdir -p iso/boot/grub
 	cp stage2_eltorito iso/boot/grub
 	cp menu.lst iso/boot/grub
+
+echoo:
+	echo $(LIBCRANK_SOURCES)
 
 $(TARGET).iso: $(TARGET).elf iso/boot/grub/stage2_eltorito iso/boot/grub/menu.lst
 	cp $(TARGET).elf iso/boot
@@ -85,6 +92,6 @@ qemu: $(TARGET).iso $(QEMU_IMG)
 	-display default,show-cursor=on \
 
 clean:
-	rm -rf $(OBJS) $(TARGET).elf $(TARGET).iso com1.out bochslog.txt bx_enh_dbg.ini *.s *.o *.out *.elf *.iso iso/
+	rm -rf $(OBJS) $(LIBCRANK_OBJS) $(TARGET).elf $(TARGET).iso com1.out bochslog.txt bx_enh_dbg.ini *.s *.o *.out *.elf *.iso iso/
 	
-.PHONY: clean bochs qemu
+.PHONY: clean bochs qemu echoo

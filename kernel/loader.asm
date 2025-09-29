@@ -20,6 +20,7 @@ align 4
 extern kmain
 
 kernel_loader:
+  ; TODO: place a 'guard page' before the kernel stack, so it page faults upon stack overflow
   mov esp, kernel_stack + KERNEL_STACK_SIZE
   ;mov eax, 0xCafeBabe
   ;xchg bx, bx

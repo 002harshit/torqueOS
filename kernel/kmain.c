@@ -115,11 +115,32 @@ void demo_key_callback(unsigned char code, char is_released)
   if (code == 0x1f) pos += 80;
 }
 
+/*
+* round: 10-11th bits
+* precision: 8-9th bits
+*/
+static inline void fpu_init(unsigned short round, unsigned short precision)
+{
+  unsigned short cw;
+  __asm__ volatile ("fninit");
+  __asm__ volatile ("fstcw %0" : "=m"(cw));
+
+  cw &= ~0x0C00;
+  cw |=  round;
+
+  cw &= ~0x0300;
+  cw |=  precision;
+
+  __asm__ volatile ("fldcw %0" : : "m"(cw));
+}
+
 void kmain()
 {
   gdt_init();
   idt_init();
   paging_init();
+
+  fpu_init(0x0400, 0x0000);
 
   timer_stop();
   timer_set_callback(demo_update_callback);
