@@ -6,8 +6,8 @@ char* strrchr(const char* s, int c)
   if (c == '\0')
     return (char*)s + l;
   for (; l; l--) {
-    if (s[l] == c)
-      return (char*)s;
+    if (s[l - 1] == c)
+      return (char*)s + l - 1;
   }
   return NULL;
 }

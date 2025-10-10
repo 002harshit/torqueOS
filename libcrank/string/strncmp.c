@@ -2,9 +2,13 @@
 
 int strncmp(const char *s1, const char *s2, size_t n)
 {
-  for (; n && *s1 && *s2; s1++, s2++, n--) {
-    if (*s1 != *s2)
-      return *s1 - *s2;
+  for (; n; n--) {
+    char a = *s1++;
+    char b = *s2++;
+    if (a != b)
+      return a - b;
+    if (a == '\0')
+      return 0;
   }
-  return *s1 - *s2;
+  return 0;
 }
