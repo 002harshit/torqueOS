@@ -1,7 +1,7 @@
 ; void set_paging(unsigned int* page_dir_ptr)
-global set_paging
+global load_page_directory
 
-set_paging:
+load_page_directory:
   ; load page directory ptr into cr0
   mov eax, [esp+4]
   mov cr3, eax

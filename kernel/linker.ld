@@ -1,26 +1,30 @@
-ENTRY(kernel_loader)     
-
+ENTRY(kernel_loader)
 SECTIONS {
-    . = 0x00100000;     
+  . = 0x00100000;
 
-    .text ALIGN (0x1000) :
-    {
-        *(.text)             
-    }
+  _kernel_start = .;
 
-    .rodata ALIGN (0x1000) : 
-    {
-        *(.rodata*)          
-    }
+  .text ALIGN(0x1000):
+  {
+    *(.text)
+  }
 
-    .data ALIGN (0x1000) :   
-    {
-        *(.data)             
-    }
+  .rodata ALIGN(0x1000):
+  {
+    *(.rodata)  
+  }
 
-    .bss ALIGN (0x1000) :    
-    {
-        *(COMMON)            
-        *(.bss)              
-    }
+  .data ALIGN(0x1000):
+  {
+    *(.data)
+  }
+
+  .bss ALIGN(0x1000):
+  {
+    *(COMMON)
+    *(.bss)
+  }
+
+  _kernel_end = .;
+
 }

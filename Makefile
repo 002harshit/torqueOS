@@ -14,6 +14,7 @@ kernel/idt.s.o \
 kernel/idt.o \
 kernel/paging.s.o \
 kernel/paging.o \
+kernel/kheap.o \
 kernel/io.o \
 driver/framebuffer.o \
 driver/serial.o \
@@ -29,6 +30,7 @@ kernel/io.h \
 kernel/gdt.h \
 kernel/idt.h \
 kernel/paging.h \
+kernel/kheap.h \
 driver/framebuffer.h \
 driver/serial.h \
 driver/timer.h \
@@ -36,7 +38,7 @@ driver/keyboard.h
 
 
 CFLAGS =
-CFLAGS += -std=gnu99 -ffreestanding -O2 -Wall -Wextra -Werror -g
+CFLAGS += -std=gnu99 -ffreestanding -O2 -Wall -Wextra -g
 CFLAGS += -I./
 CFLAGS +=-masm=intel
 

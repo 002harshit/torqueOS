@@ -134,8 +134,27 @@ static inline void fpu_init(unsigned short round, unsigned short precision)
   __asm__ volatile ("fldcw %0" : : "m"(cw));
 }
 
+
+static void paging_demo()
+{
+  gdt_init();
+  idt_init();
+  paging_init();
+  
+  fb_clear_screen();
+
+  // try to access address ie probably not allocated
+  unsigned int *ptr = (unsigned int*)0xA0000000;
+  unsigned int do_page_fault = *ptr;
+  do_page_fault = 69;
+
+  lib_printf("%d", do_page_fault);
+}
+
 void kmain()
 {
+  paging_demo();
+  return;
   gdt_init();
   idt_init();
   paging_init();
