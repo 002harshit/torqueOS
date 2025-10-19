@@ -91,7 +91,7 @@ qemu: $(TARGET).iso $(QEMU_IMG)
 	-drive file=$(QEMU_IMG),format=qcow2 \
 	-netdev user,id=net0,hostfwd=tcp::2222-:22 \
 	-device e1000,netdev=net0 \
-	-display default,show-cursor=on \
+	-display sdl,show-cursor=on \
 
 clean:
 	rm -rf $(OBJS) $(LIBCRANK_OBJS) $(TARGET).elf $(TARGET).iso com1.out bochslog.txt bx_enh_dbg.ini *.s *.o *.out *.elf *.iso iso/

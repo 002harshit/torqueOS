@@ -144,11 +144,14 @@ static void paging_demo()
   fb_clear_screen();
 
   // try to access address ie probably not allocated
-  unsigned int *ptr = (unsigned int*)0xA0000000;
-  unsigned int do_page_fault = *ptr;
-  do_page_fault = 69;
+  unsigned int *do_page_fault = (unsigned int*)0xA0000000;
+  *do_page_fault = 69;
 
-  lib_printf("%d", do_page_fault);
+  lib_printf("%d\n", *do_page_fault);
+
+  // if it reaches here, something is wrong as it doesnt page fault
+  page_entry_t *page = get_page(0xA0000000, 0, current_directory);
+  lib_printf("PDE: %x, PTE: %x, present=%d\n", page, page ? page->entry.present : 0);
 }
 
 void kmain()

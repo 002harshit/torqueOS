@@ -1,4 +1,4 @@
-; void set_paging(unsigned int* page_dir_ptr)
+; void load_page_directory(unsigned int* page_dir_ptr)
 global load_page_directory
 
 load_page_directory:

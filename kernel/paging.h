@@ -17,7 +17,7 @@ typedef union page_entry {
     unsigned int pat:            1;
     unsigned int global:         1;
     unsigned int zero:           3;
-    unsigned int frame: 20;
+    unsigned int frame:         20;
   } entry;
   unsigned int raw;
 } page_entry_t;
@@ -37,5 +37,6 @@ void paging_init();
 void on_page_fault();
 void switch_current_directory(page_directory_t *dir);
 page_entry_t *get_page(unsigned int address, int should_make, page_directory_t *dir);
+extern page_directory_t *current_directory;
 
 #endif // PAGING_H

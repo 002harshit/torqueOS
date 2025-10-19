@@ -8,7 +8,7 @@
 
 extern void load_page_directory(unsigned int* dir);
 
-static page_directory_t *current_directory;
+page_directory_t *current_directory;
 static page_directory_t *kernel_directory;
 
 static unsigned int *frames;
@@ -131,25 +131,6 @@ page_entry_t *get_page(unsigned int address, int should_make, page_directory_t *
   dir->tables_physical[table_index] = tmp | 0x7; // PRESENT, RW, USER;
   return &dir->tables[table_index]->pages[address % 1024];
 }
-
-/*
-void paging_init_identity()
-{
-  // INFO: setting paging directory to 010 <Supervisor, Write Enabled, Not Present> state
-  for (int i = 0; i < PAGE_DIRECTORY_SIZE; i++) {
-    page_directory[i] = 0x2;
-  }
-
-  // INFO: setting this page to 011 <Supervisor, Write Enabled, Present> state
-  for (int i = 0; i < PAGE_ENTRY_SIZE; i++) {
-    current_page[i] = (i * PAGE_FRAME_SIZE) | 0x3;
-  }
-
-  page_directory[0] = ((unsigned int) current_page) | 0x3;
-
-  switch_page_directory(page_directory);
-}
-*/
 
 void on_page_fault()
 {
