@@ -3,20 +3,14 @@
 #include "common/lib.h"
 #include "libcrank/std.h"
 
-// unsigned int page_directory[PAGE_DIRECTORY_SIZE] __attribute__((aligned(PAGE_FRAME_SIZE)));
-// unsigned int current_page[PAGE_ENTRY_SIZE] __attribute__((aligned(PAGE_FRAME_SIZE)));
-
-extern void load_page_directory(unsigned int* dir);
-
 page_directory_t *current_directory;
-static page_directory_t *kernel_directory;
+page_directory_t *kernel_directory;
 
 static unsigned int *frames;
 static unsigned int frames_count;
 
 #define INDEX_FROM_BIT(a) (a/(8*4))
 #define OFFSET_FROM_BIT(a) (a%(8*4))
-
 
 static void set_frame(unsigned int frame_address)
 {
@@ -108,10 +102,11 @@ void paging_init()
   memset(kernel_directory, 0, sizeof(page_directory_t));
 
   for (unsigned int i = 0; i < placement_address; i += PAGE_SIZE) {
-    alloc_frame(get_page(i, 1, kernel_directory), 0, 0);
+    alloc_frame(get_page(i, 1, kernel_directory), 1, 0);
   }
 
   switch_page_directory(kernel_directory);
+  kheap = heap_create();
 }
 
 page_entry_t *get_page(unsigned int address, int should_make, page_directory_t *dir)
@@ -139,3 +134,20 @@ void on_page_fault()
   while(1) {}
 }
 
+void* sbrk(unsigned int size)
+{
+  if (!size) {
+    return (void*) placement_address;
+  }
+  unsigned int prev_top = placement_address;
+  unsigned int addr = kmalloc_a(size);
+  if (addr == (unsigned int) -1) {
+    // TODO: put panic in place of this
+    lib_printf("UNABLE TO ALLOC MEM\n");
+    while(1) {}
+  }
+  for (unsigned int i = prev_top; i < placement_address; i += PAGE_SIZE) {
+    alloc_frame(get_page(i, 1, kernel_directory), 1, 1);
+  }
+  return (void*) addr;
+}

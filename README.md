@@ -10,7 +10,7 @@
 - [ ] Stack Smashing Protector
 - [ ] Access multiboot info
 - [x] Enable GDT
-- [ ] Memory Management (malloc, free)
+- [x] Memory Management (malloc, free)
 - [x] Enable Interrupts
 - [x] Read Keyboard inputs
 - [ ] Multithreaded kernel

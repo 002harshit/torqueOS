@@ -17,14 +17,41 @@
 #include "gdt.h"
 #include "idt.h"
 #include "paging.h"
+#include "kheap.h"
+
 #include "common/lib.h"
 #include "driver/framebuffer.h"
 #include "driver/timer.h"
 #include "driver/keyboard.h"
 
+#include "libcrank/string.h"
+
 void lib_putchar(char c)
 {
   fb_write(c);
+}
+
+void timer_demo();
+
+void malloc_demo()
+{
+  fb_clear_screen();
+  gdt_init();
+  idt_init();
+  paging_init();
+
+  char* buffer;
+  // buffer = (char*)(0xDEAFBEEF); buffer[0] = 'a'; /* SHOULD PAGE FAULT */
+  buffer = (char*)kmalloc(sizeof(char) * 64);
+
+  strcpy(buffer, "Hello, Broo");
+  lib_printf("MSG: %s, ADDR: %x\n", buffer, (void*)buffer);
+}
+
+void kmain()
+{
+  timer_demo();
+  return;
 }
 
 void draw_torque_os_logo()
@@ -134,30 +161,8 @@ static inline void fpu_init(unsigned short round, unsigned short precision)
   __asm__ volatile ("fldcw %0" : : "m"(cw));
 }
 
-
-static void paging_demo()
+void timer_demo()
 {
-  gdt_init();
-  idt_init();
-  paging_init();
-  
-  fb_clear_screen();
-
-  // try to access address ie probably not allocated
-  unsigned int *do_page_fault = (unsigned int*)0xA0000000;
-  *do_page_fault = 69;
-
-  lib_printf("%d\n", *do_page_fault);
-
-  // if it reaches here, something is wrong as it doesnt page fault
-  page_entry_t *page = get_page(0xA0000000, 0, current_directory);
-  lib_printf("PDE: %x, PTE: %x, present=%d\n", page, page ? page->entry.present : 0);
-}
-
-void kmain()
-{
-  paging_demo();
-  return;
   gdt_init();
   idt_init();
   paging_init();

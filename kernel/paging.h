@@ -32,11 +32,15 @@ typedef struct page_directory {
   unsigned int physical_address;
 } page_directory_t;
 
-
 void paging_init();
 void on_page_fault();
 void switch_current_directory(page_directory_t *dir);
 page_entry_t *get_page(unsigned int address, int should_make, page_directory_t *dir);
+void* sbrk(unsigned int size);
+
+extern void load_page_directory(unsigned int* dir);
+
 extern page_directory_t *current_directory;
+extern page_directory_t *kernel_directory;
 
 #endif // PAGING_H
