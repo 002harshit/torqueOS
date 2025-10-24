@@ -1,6 +1,5 @@
 #include "io.h"
 #include "idt.h"
-#include "common/lib.h"
 
 #define PIC_1 0x20
 #define PIC_2 0xA0

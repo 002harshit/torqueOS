@@ -19,14 +19,14 @@
 #include "paging.h"
 #include "kheap.h"
 
-#include "common/lib.h"
 #include "driver/framebuffer.h"
 #include "driver/timer.h"
 #include "driver/keyboard.h"
 
+#include "libcrank/std.h"
 #include "libcrank/string.h"
 
-void lib_putchar(char c)
+void putchar(char c)
 {
   fb_write(c);
 }
@@ -45,7 +45,7 @@ void malloc_demo()
   buffer = (char*)kmalloc(sizeof(char) * 64);
 
   strcpy(buffer, "Hello, Broo");
-  lib_printf("MSG: %s, ADDR: %x\n", buffer, (void*)buffer);
+  printf("MSG: %s, ADDR: %x\n", buffer, (void*)buffer);
 }
 
 void kmain()
@@ -59,23 +59,23 @@ void draw_torque_os_logo()
   fb_clear_screen();
   fb_move(0);
   for (int i = 0; i < 5; i++) {
-    lib_puts("\n");
+    puts("\n");
   }
   #define WHITESPACE "                  "
-  lib_puts(WHITESPACE ".-------------------------------------.\n");
-  lib_puts(WHITESPACE "|  _____ ___  ____   ___  _   _ _____  |\n");
-  lib_puts(WHITESPACE "| |_   _/ _ \\|  _ \\ / _ \\| | | | ____| |\n");
-  lib_puts(WHITESPACE "|   | || | | | |_) | | | | | | |  _|   |\n");
-  lib_puts(WHITESPACE "|   | || |_| |  _ <| |_| | |_| | |___  |\n");
-  lib_puts(WHITESPACE "|   | || |_| |  _ <| |_| | |_| | |___  |\n");
-  lib_puts(WHITESPACE "|   |_| \\___/|_| \\_\\\\__\\_\\\\___/|_____| |\n");
-  lib_puts(WHITESPACE "|              ___  ____               |\n");
-  lib_puts(WHITESPACE "|             / _ \\/ ___|              |\n");
-  lib_puts(WHITESPACE "|            | | | \\___ \\              |\n");
-  lib_puts(WHITESPACE "|            | |_| |___) |             |\n");
-  lib_puts(WHITESPACE "|             \\___/|____/              |\n");
-  lib_puts(WHITESPACE ".--------------------------------------.\n\n\n");
-  lib_puts(WHITESPACE "PRESS WSAD to Move");
+  puts(WHITESPACE ".-------------------------------------.\n");
+  puts(WHITESPACE "|  _____ ___  ____   ___  _   _ _____  |\n");
+  puts(WHITESPACE "| |_   _/ _ \\|  _ \\ / _ \\| | | | ____| |\n");
+  puts(WHITESPACE "|   | || | | | |_) | | | | | | |  _|   |\n");
+  puts(WHITESPACE "|   | || |_| |  _ <| |_| | |_| | |___  |\n");
+  puts(WHITESPACE "|   | || |_| |  _ <| |_| | |_| | |___  |\n");
+  puts(WHITESPACE "|   |_| \\___/|_| \\_\\\\__\\_\\\\___/|_____| |\n");
+  puts(WHITESPACE "|              ___  ____               |\n");
+  puts(WHITESPACE "|             / _ \\/ ___|              |\n");
+  puts(WHITESPACE "|            | | | \\___ \\              |\n");
+  puts(WHITESPACE "|            | |_| |___) |             |\n");
+  puts(WHITESPACE "|             \\___/|____/              |\n");
+  puts(WHITESPACE ".--------------------------------------.\n\n\n");
+  puts(WHITESPACE "PRESS WSAD to Move");
   #undef WHITESPACE
 
 }
@@ -106,9 +106,9 @@ void demo_update_callback()
   }
 
   fb_move(0);
-  lib_printf("KEYCODE: %x  IS_RELEASED: %d  ", last_keycode, last_keycode > 0x80);
-  lib_printf("SHIFT: %d  CTRL: %d  ALT: %d\n", kb_is_key_pressed(0x2a), kb_is_key_pressed(0x1d), kb_is_key_pressed(0x38));
-  lib_printf("TICK: %d", timer_get_elapsed());
+  printf("KEYCODE: %x  IS_RELEASED: %d  ", last_keycode, last_keycode > 0x80);
+  printf("SHIFT: %d  CTRL: %d  ALT: %d\n", kb_is_key_pressed(0x2a), kb_is_key_pressed(0x1d), kb_is_key_pressed(0x38));
+  printf("TICK: %d", timer_get_elapsed());
   
   const char* sprite = player_jump;
   if (is_falling) sprite = player_fall;
@@ -174,7 +174,7 @@ void timer_demo()
   timer_start(62);
 
   draw_torque_os_logo();
-  lib_printf("\n");
+  printf("\n");
   kb_init();
   kb_set_callback(demo_key_callback);
 }

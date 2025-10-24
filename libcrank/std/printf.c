@@ -1,14 +1,13 @@
-#include "lib.h"
+#include "../std.h"
 
-#define PRINTF_FLOAT_PRECISION 100000000
 
-extern void lib_putchar(char c);
+extern void putchar(char c);
 
-void lib_puts(char* buf)
+void puts(char* buf)
 {
   char* p = buf;
   while (*p != '\0') {
-    lib_putchar(*p);
+    putchar(*p);
     p++;
   }
 }
@@ -22,7 +21,7 @@ static void print_int(unsigned int v, int base)
     v = v / base;
   } while(v > 0);
   for (int i = len-1; i > -1; i--) {
-    lib_putchar(buffer[i]);
+    putchar(buffer[i]);
   }
 }
 
@@ -35,17 +34,17 @@ static void print_hex(unsigned int v, const char* symbols)
     v = v / 16;
   } while (v > 0);
   for (int i = len-1; i > -1; i--) {
-    lib_putchar(buffer[i]);
+    putchar(buffer[i]);
   }
 }
 
-void lib_printf(const char* fmt, ...)
+void printf(const char* fmt, ...)
 {
   va_list va;
   va_start(va, fmt);
   for (const char* p = fmt; p[0] != '\0'; p++) {
     if (*p != '%') {
-      lib_putchar(p[0]);
+      putchar(p[0]);
       continue;
     }
     p++;
@@ -55,18 +54,18 @@ void lib_printf(const char* fmt, ...)
       case 'c': {
         int arg = va_arg(va, int);
         if (arg != '\0')
-        lib_putchar(arg);
+        putchar(arg);
       } break;
       case 's': {
 
       char* arg = va_arg(va, char*);
-        lib_puts(arg);
+        puts(arg);
       } break;
 
       case 'd': {
         int arg = va_arg(va, int);
         if (arg < 0) {
-          lib_putchar('-');
+          putchar('-');
           arg = -arg;
         }
         print_int(arg, 10);
@@ -76,13 +75,13 @@ void lib_printf(const char* fmt, ...)
       case 'x': {
         unsigned int arg = va_arg(va, unsigned int);
         const char* hex_symbols =  p[0] == 'x' ? "0123456789abcdef" : "0123456789ABCDEF";
-        lib_puts("0x");
+        puts("0x");
         print_hex(arg, hex_symbols);
       } break;
 
       case 'b': {
         unsigned int arg = va_arg(va, unsigned int);
-        lib_puts("0b");
+        puts("0b");
         print_int(arg, 2);
       } break;
 
@@ -90,18 +89,18 @@ void lib_printf(const char* fmt, ...)
       case 'f': {
         double arg = va_arg(va, double);
         if (arg < 0) {
-          lib_putchar('-');
+          putchar('-');
           arg = -arg;
         }
         int iarg = arg;
         print_int(iarg, 10);
         arg = arg - (double)iarg;
-        lib_putchar('.');
+        putchar('.');
         print_int(arg * PRINTF_FLOAT_PRECISION, 10);
       } break;
 
       default: {
-        lib_putchar(p[0]);
+        putchar(p[0]);
       }
     }
   }

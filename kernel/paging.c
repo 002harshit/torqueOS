@@ -1,6 +1,6 @@
 #include "./paging.h"
 #include "./kheap.h"
-#include "common/lib.h"
+
 #include "libcrank/std.h"
 
 page_directory_t *current_directory;
@@ -62,7 +62,7 @@ page_entry_t *alloc_frame(page_entry_t *page, int is_kernel, int is_writeable)
   unsigned int index = get_first_frame();
   if (index == (unsigned int) -1) {
     // TODO: Replace this print with panic statement
-    lib_printf("Unable to alloc free frame");
+    printf("Unable to alloc free frame");
     while (1) {}
     return NULL;
   }
@@ -129,7 +129,7 @@ page_entry_t *get_page(unsigned int address, int should_make, page_directory_t *
 
 void on_page_fault()
 {
-  lib_printf("PAGE FAULT\n");
+  printf("PAGE FAULT\n");
   // TODO: REPLACE IT WITH PANIC
   while(1) {}
 }
@@ -143,7 +143,7 @@ void* sbrk(unsigned int size)
   unsigned int addr = kmalloc_a(size);
   if (addr == (unsigned int) -1) {
     // TODO: put panic in place of this
-    lib_printf("UNABLE TO ALLOC MEM\n");
+    printf("UNABLE TO ALLOC MEM\n");
     while(1) {}
   }
   for (unsigned int i = prev_top; i < placement_address; i += PAGE_SIZE) {

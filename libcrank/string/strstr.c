@@ -1,5 +1,4 @@
 #include "../string.h"
-#include "../../common/lib.h"
 
 char* strstr(const char* haystack, const char* needle)
 {

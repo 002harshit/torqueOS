@@ -1,7 +1,6 @@
 #include "./kheap.h"
 #include "./paging.h"
 #include "libcrank/types.h"
-#include "common/lib.h"
 
 // INFO: we are only interested in address of _kernel_end and not its value stored innit
 extern unsigned int _kernel_end;

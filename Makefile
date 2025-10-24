@@ -20,10 +20,6 @@ driver/framebuffer.o \
 driver/serial.o \
 driver/timer.o \
 driver/keyboard.o \
-common/printf.o
-
-LIBCRANK_SOURCES = $(wildcard libcrank/*.c libcrank/*/*.c)
-LIBCRANK_OBJS = $(LIBCRANK_SOURCES:.c=.o)
 
 HEADERS = \
 kernel/io.h \
@@ -36,11 +32,13 @@ driver/serial.h \
 driver/timer.h \
 driver/keyboard.h
 
-
-CFLAGS =
+CFLAGS ?=
 CFLAGS += -std=gnu99 -ffreestanding -O2 -Wall -Wextra -g
 CFLAGS += -I./
 CFLAGS +=-masm=intel
+
+CRANK_SRC = libcrank
+LIBCRANK = $(CRANK_SRC)/libcrank.a
 
 QEMU_IMG = qemu_disk.qcow2
 
@@ -52,16 +50,16 @@ all: $(TARGET).iso
 %.s.o: %.asm
 	yasm -f elf32 $< -o $@
 
-$(TARGET).elf: $(OBJS) kernel/linker.ld $(LIBCRANK_OBJS)
-	$(LD) -T kernel/linker.ld -melf_i386 $(OBJS) $(LIBCRANK_OBJS) -o $(TARGET).elf
+$(LIBCRANK):
+	$(MAKE) -C $(CRANK_SRC)
+
+$(TARGET).elf: $(OBJS) $(LIBCRANK) kernel/linker.ld
+	$(LD) -T kernel/linker.ld -melf_i386 $(OBJS) $(LIBCRANK) -o $(TARGET).elf
 
 iso/boot/grub/stage2_eltorito iso/boot/grub/menu.lst: stage2_eltorito menu.lst
 	mkdir -p iso/boot/grub
 	cp stage2_eltorito iso/boot/grub
 	cp menu.lst iso/boot/grub
-
-echoo:
-	echo $(LIBCRANK_SOURCES)
 
 $(TARGET).iso: $(TARGET).elf iso/boot/grub/stage2_eltorito iso/boot/grub/menu.lst
 	cp $(TARGET).elf iso/boot
@@ -94,6 +92,7 @@ qemu: $(TARGET).iso $(QEMU_IMG)
 	-display sdl,show-cursor=on \
 
 clean:
-	rm -rf $(OBJS) $(LIBCRANK_OBJS) $(TARGET).elf $(TARGET).iso com1.out bochslog.txt bx_enh_dbg.ini *.s *.o *.out *.elf *.iso iso/
+	rm -rf $(OBJS) $(TARGET).elf $(TARGET).iso com1.out bochslog.txt bx_enh_dbg.ini *.s *.o *.out *.elf *.iso iso/
+	$(MAKE) -C $(CRANK_SRC) clean
 	
 .PHONY: clean bochs qemu echoo
