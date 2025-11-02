@@ -32,67 +32,94 @@ driver/serial.h \
 driver/timer.h \
 driver/keyboard.h
 
+LIBCRANK_TARGET=libcrank.a
+LIBCRANK_DIR=libcrank
+
+LIBCRANK_OBJS = \
+$(LIBCRANK_DIR)/math/basic.o \
+$(LIBCRANK_DIR)/math/float.o \
+$(LIBCRANK_DIR)/math/mat4.o \
+$(LIBCRANK_DIR)/math/vec2.o \
+$(LIBCRANK_DIR)/math/vec3.o \
+$(LIBCRANK_DIR)/std/memcmp.o \
+$(LIBCRANK_DIR)/std/memcpy.o \
+$(LIBCRANK_DIR)/std/memset.o \
+$(LIBCRANK_DIR)/std/printf.o \
+$(LIBCRANK_DIR)/string/strcat.o \
+$(LIBCRANK_DIR)/string/strchr.o \
+$(LIBCRANK_DIR)/string/strcmp.o \
+$(LIBCRANK_DIR)/string/strcpy.o  \
+$(LIBCRANK_DIR)/string/strlen.o \
+$(LIBCRANK_DIR)/string/strncat.o \
+$(LIBCRANK_DIR)/string/strncmp.o \
+$(LIBCRANK_DIR)/string/strncpy.o \
+$(LIBCRANK_DIR)/string/strrchr.o \
+$(LIBCRANK_DIR)/string/strstr.o \
+$(LIBCRANK_DIR)/string/strtok.o
+
+LIBCRANK_HEADERS = \
+$(LIBCRANK_DIR)/types.h \
+$(LIBCRANK_DIR)/std.h \
+$(LIBCRANK_DIR)/string.h \
+$(LIBCRANK_DIR)/math.h
+
 CFLAGS ?=
 CFLAGS += -std=gnu99 -ffreestanding -O2 -Wall -Wextra -g
 CFLAGS += -I./
 CFLAGS +=-masm=intel
 
-CRANK_SRC = libcrank
-LIBCRANK = $(CRANK_SRC)/libcrank.a
-
 QEMU_IMG = qemu_disk.qcow2
+
+ISO_DIR = iso
 
 all: $(TARGET).iso
 
-%.o: %.c $(HEADERS)
+$(LIBCRANK_TARGET): $(LIBCRANK_OBJS)
+	$(AR) rcs $(LIBCRANK_TARGET) $(LIBCRANK_OBJS)
+
+%.o: %.c $(HEADERS) $(LIBCRANK_HEADERS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 %.s.o: %.asm
 	yasm -f elf32 $< -o $@
 
-$(LIBCRANK):
-	$(MAKE) -C $(CRANK_SRC)
+$(TARGET).elf: $(OBJS) $(LIBCRANK_TARGET) kernel/linker.ld
+	$(LD) -T kernel/linker.ld -melf_i386 $(OBJS) $(LIBCRANK_TARGET) -o $(TARGET).elf
 
-$(TARGET).elf: $(OBJS) $(LIBCRANK) kernel/linker.ld
-	$(LD) -T kernel/linker.ld -melf_i386 $(OBJS) $(LIBCRANK) -o $(TARGET).elf
+$(ISO_DIR)/boot/grub/grub.cfg: grub.cfg
+	mkdir -p $(ISO_DIR)/boot/grub
+	cp grub.cfg $(ISO_DIR)/boot/grub
 
-iso/boot/grub/stage2_eltorito iso/boot/grub/menu.lst: stage2_eltorito menu.lst
-	mkdir -p iso/boot/grub
-	cp stage2_eltorito iso/boot/grub
-	cp menu.lst iso/boot/grub
-
-$(TARGET).iso: $(TARGET).elf iso/boot/grub/stage2_eltorito iso/boot/grub/menu.lst
+$(TARGET).iso: $(TARGET).elf $(ISO_DIR)/boot/grub/grub.cfg
 	cp $(TARGET).elf iso/boot
-	genisoimage -R                  \
-	-b boot/grub/stage2_eltorito    \
-	-no-emul-boot                   \
-	-boot-load-size 4               \
-	-A os                           \
-	-input-charset utf8             \
-	-quiet                          \
-	-boot-info-table                \
-	-o $(TARGET).iso                \
-	iso
-
-bochs: $(TARGET).iso bochsrc.txt
-	bochs -f bochsrc.txt -q
+	grub-mkrescue -o $(TARGET).iso $(ISO_DIR)/
 
 $(QEMU_IMG):
 	qemu-img create -f qcow2 $(QEMU_IMG) 1G
 
-qemu: $(TARGET).iso $(QEMU_IMG)
+qemu: $(TARGET).iso
 	qemu-system-i386 \
-	-m 1G \
-	-smp 2 \
-	-boot d \
-	-cdrom $(TARGET).iso \
-	-drive file=$(QEMU_IMG),format=qcow2 \
-	-netdev user,id=net0,hostfwd=tcp::2222-:22 \
-	-device e1000,netdev=net0 \
-	-display sdl,show-cursor=on \
+		-m 1G \
+		-smp 2 \
+		-boot d \
+		-cdrom $(TARGET).iso \
+		-display sdl,show-cursor=on \
+		-chardev stdio,id=char0 \
+		-serial chardev:char0
+
+qemu_uefi: $(TARGET).iso
+	qemu-system-x86_64 \
+		-m 1G \
+		-smp 2 \
+		-boot d \
+		-cdrom $(TARGET).iso \
+		-display sdl,show-cursor=on \
+		-chardev stdio,id=char0 \
+		-serial chardev:char0 \
+		-smbios type=0,uefi=on -bios OVMF_BIOS.fd
 
 clean:
-	rm -rf $(OBJS) $(TARGET).elf $(TARGET).iso com1.out bochslog.txt bx_enh_dbg.ini *.s *.o *.out *.elf *.iso iso/
-	$(MAKE) -C $(CRANK_SRC) clean
+	rm -rf $(OBJS) $(TARGET).elf $(TARGET).iso com1.out  *.s *.o *.out *.elf *.iso $(ISO_DIR) 
+	rm -rf $(LIBCRANK_OBJS) $(LIBCRANK_TARGET)
 	
-.PHONY: clean bochs qemu echoo
+.PHONY: clean bochs qemu

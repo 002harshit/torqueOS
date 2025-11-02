@@ -13,6 +13,7 @@
 - [x] Memory Management (malloc, free)
 - [x] Enable Interrupts
 - [x] Read Keyboard inputs
+- [x] Boot using Multiboot2
 - [ ] Multithreaded kernel
 - [ ] Use Minidbg as internal debugger
 - [ ] Filesystem Support

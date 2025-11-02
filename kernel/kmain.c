@@ -18,163 +18,103 @@
 #include "idt.h"
 #include "paging.h"
 #include "kheap.h"
+#include "multiboot2.h"
 
 #include "driver/framebuffer.h"
+#include "driver/serial.h"
 #include "driver/timer.h"
 #include "driver/keyboard.h"
 
 #include "libcrank/std.h"
 #include "libcrank/string.h"
 
+__attribute__((section(".multiboot_header")))
+const struct multiboot_header_tag_framebuffer framebuffer_tag = {
+    .type = MULTIBOOT_HEADER_TAG_FRAMEBUFFER,
+    .size = sizeof(framebuffer_tag),
+    .flags = 0,
+    // width, height, depth not set so bios will choose the default framebuffer
+};
+
 void putchar(char c)
 {
-  fb_write(c);
+  serial_write(c);
 }
 
-void timer_demo();
-
-void malloc_demo()
+void kmain(unsigned int magic_number, multiboot_info_t* mbi)
 {
-  fb_clear_screen();
+  serial_init();
   gdt_init();
   idt_init();
-  paging_init();
+  // paging_init();
 
-  char* buffer;
-  // buffer = (char*)(0xDEAFBEEF); buffer[0] = 'a'; /* SHOULD PAGE FAULT */
-  buffer = (char*)kmalloc(sizeof(char) * 64);
-
-  strcpy(buffer, "Hello, Broo");
-  printf("MSG: %s, ADDR: %x\n", buffer, (void*)buffer);
-}
-
-void kmain()
-{
-  timer_demo();
-  return;
-}
-
-void draw_torque_os_logo()
-{
-  fb_clear_screen();
-  fb_move(0);
-  for (int i = 0; i < 5; i++) {
-    puts("\n");
+  if (magic_number != MULTIBOOT2_BOOTLOADER_MAGIC) {
+    printf("Something is wrong with multiboot magic number: %x\nIt should be: %x\n", magic_number, MULTIBOOT2_BOOTLOADER_MAGIC);
+    while(1) {}
+    return;
   }
-  #define WHITESPACE "                  "
-  puts(WHITESPACE ".-------------------------------------.\n");
-  puts(WHITESPACE "|  _____ ___  ____   ___  _   _ _____  |\n");
-  puts(WHITESPACE "| |_   _/ _ \\|  _ \\ / _ \\| | | | ____| |\n");
-  puts(WHITESPACE "|   | || | | | |_) | | | | | | |  _|   |\n");
-  puts(WHITESPACE "|   | || |_| |  _ <| |_| | |_| | |___  |\n");
-  puts(WHITESPACE "|   | || |_| |  _ <| |_| | |_| | |___  |\n");
-  puts(WHITESPACE "|   |_| \\___/|_| \\_\\\\__\\_\\\\___/|_____| |\n");
-  puts(WHITESPACE "|              ___  ____               |\n");
-  puts(WHITESPACE "|             / _ \\/ ___|              |\n");
-  puts(WHITESPACE "|            | | | \\___ \\              |\n");
-  puts(WHITESPACE "|            | |_| |___) |             |\n");
-  puts(WHITESPACE "|             \\___/|____/              |\n");
-  puts(WHITESPACE ".--------------------------------------.\n\n\n");
-  puts(WHITESPACE "PRESS WSAD to Move");
-  #undef WHITESPACE
 
-}
+  printf("MBI_SIZE: %d\n", mbi->total_size);
 
-int ticks = 0;
-int is_falling = 0;
-int pos = 19 * 80 + 38;
-int prev = 19 * 80 + 38;
-unsigned char last_keycode = 0;
+  // multiboot info contains array of tags ie terminated by tag.type = 0, tag.size = 8
+  unsigned int tag_addr = (unsigned int) &mbi->tags;
+  multiboot_tag_t* tag;
+  do {
+    tag = (multiboot_tag_t*)(tag_addr);
+    switch (tag->type) {
+      case MULTIBOOT_TAG_TYPE_LOAD_BASE_ADDR: {
+      } break;
 
-void demo_update_callback()
-{
-  static const char player_fall[] = {
-  ' ', 'o', ' ',
-  '/', '|', '\\',
-  '/', ' ', '\\'
-  };
+      case MULTIBOOT_TAG_TYPE_CMDLINE: {
+        struct multiboot_tag_string* t = (void*) tag;
+        printf("> CMDLINE: %s\n", t->string);
+      } break;
 
-  static const char player_jump[] = {
-  '\\', 'o', '/',
-  ' ',  '|', ' ',
-  '/',  ' ', '\\'
-  };
+      case MULTIBOOT_TAG_TYPE_BOOT_LOADER_NAME: {
+        struct multiboot_tag_string* t = (void*) tag;
+        printf("> BOOT_LOADER_NAME: %s\n", t->string);
+      } break;
+
+      case MULTIBOOT_TAG_TYPE_APM: {
+      } break;
+
+      case MULTIBOOT_TAG_TYPE_MMAP: {
+      } break;
+
+      case MULTIBOOT_TAG_TYPE_ELF_SECTIONS: {
+      } break;
+
+      case MULTIBOOT_TAG_TYPE_BASIC_MEMINFO: {
+      } break;
+
+      case MULTIBOOT_TAG_TYPE_BOOTDEV: {
+      } break;
+
+      case MULTIBOOT_TAG_TYPE_FRAMEBUFFER: {
+        struct multiboot_tag_framebuffer_common* fb = (void*) tag;
+        printf("> FB ADDR: %x\n", fb->framebuffer_addr);
+        printf("> FB PITCH: %d\n", fb->framebuffer_pitch);
+        printf("> FB WIDTH: %d\n", fb->framebuffer_width);
+        printf("> FB HEIGHT: %d\n", fb->framebuffer_height);
+        printf("> FB BPP: %d\n", fb->framebuffer_bpp);
+        printf("> FB TYPE: %d\n", fb->framebuffer_type);
+      } break;
+
+      case MULTIBOOT_TAG_TYPE_ACPI_OLD: {
+      } break;
+
+      case MULTIBOOT_TAG_TYPE_END: {
+      } break;
+
+      default: {
+        printf("Tag type not handled by parser: %d\n", tag->type);
+      }
+    }
+    tag_addr += MULTIBOOT_ALIGN_TAG(tag->size);
+  } while (!(tag->type == 0 && tag->size == 8));
+
+  printf("MBI SIZE CHECK: %d", (unsigned int) tag_addr - (unsigned int)mbi);
   
-  if (ticks++ % 16 == 0) {
-    draw_torque_os_logo();
-    is_falling = !is_falling;
-  }
-
-  fb_move(0);
-  printf("KEYCODE: %x  IS_RELEASED: %d  ", last_keycode, last_keycode > 0x80);
-  printf("SHIFT: %d  CTRL: %d  ALT: %d\n", kb_is_key_pressed(0x2a), kb_is_key_pressed(0x1d), kb_is_key_pressed(0x38));
-  printf("TICK: %d", timer_get_elapsed());
-  
-  const char* sprite = player_jump;
-  if (is_falling) sprite = player_fall;
-
-  fb_move(prev);
-  for (int k = 0; k < 9; k++) {
-    int r = k / 3;
-    int c = k % 3;
-    fb_move(prev + c + r * 80);
-    fb_write(' ');
-  }
-
-  fb_move(pos);
-  for (int k = 0; k < 9; k++) {
-    int r = k / 3;
-    int c = k % 3;
-    fb_move(pos + c + r * 80);
-    fb_write(sprite[k]);
-  }
- }
-
-void demo_key_callback(unsigned char code, char is_released)
-{
-  fb_move(22 * 80 + 10);
-  last_keycode = code;
-  prev = pos;
-  if (is_released) return;
-  if (code == 0x1e) pos -= 1;
-  if (code == 0x20) pos += 1;
-  if (code == 0x11) pos -= 80;
-  if (code == 0x1f) pos += 80;
-}
-
-/*
-* round: 10-11th bits
-* precision: 8-9th bits
-*/
-static inline void fpu_init(unsigned short round, unsigned short precision)
-{
-  unsigned short cw;
-  __asm__ volatile ("fninit");
-  __asm__ volatile ("fstcw %0" : "=m"(cw));
-
-  cw &= ~0x0C00;
-  cw |=  round;
-
-  cw &= ~0x0300;
-  cw |=  precision;
-
-  __asm__ volatile ("fldcw %0" : : "m"(cw));
-}
-
-void timer_demo()
-{
-  gdt_init();
-  idt_init();
-  paging_init();
-
-  fpu_init(0x0400, 0x0000);
-
-  timer_stop();
-  timer_set_callback(demo_update_callback);
-  timer_start(62);
-
-  draw_torque_os_logo();
-  printf("\n");
-  kb_init();
-  kb_set_callback(demo_key_callback);
+  // we don't want to get out of kmain so Kernel can listen to i/o events or interrupts
+  while(1) {}
 }
