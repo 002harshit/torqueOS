@@ -64,7 +64,7 @@ $(LIBCRANK_DIR)/string.h \
 $(LIBCRANK_DIR)/math.h
 
 CFLAGS ?=
-CFLAGS += -std=gnu99 -ffreestanding -O2 -Wall -Wextra -g
+CFLAGS += -std=gnu99 -ffreestanding -O0 -Wall -Wextra -g -ggdb
 CFLAGS += -I./
 CFLAGS +=-masm=intel
 
@@ -104,8 +104,7 @@ qemu: $(TARGET).iso
 		-boot d \
 		-cdrom $(TARGET).iso \
 		-display sdl,show-cursor=on \
-		-chardev stdio,id=char0 \
-		-serial chardev:char0
+		-serial mon:stdio
 
 qemu_uefi: $(TARGET).iso
 	qemu-system-x86_64 \
@@ -114,8 +113,7 @@ qemu_uefi: $(TARGET).iso
 		-boot d \
 		-cdrom $(TARGET).iso \
 		-display sdl,show-cursor=on \
-		-chardev stdio,id=char0 \
-		-serial chardev:char0 \
+		-serial mon:stdio \
 		-smbios type=0,uefi=on -bios OVMF_BIOS.fd
 
 clean:

@@ -6,6 +6,7 @@
 *.qcow2
 *.a
 *.so
+*.sym
 iso/*
 bochslog.txt
 bx_enh_dbg.ini
