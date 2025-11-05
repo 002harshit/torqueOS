@@ -12,11 +12,9 @@ kernel/gdt.s.o \
 kernel/gdt.o \
 kernel/idt.s.o \
 kernel/idt.o \
-kernel/paging.s.o \
-kernel/paging.o \
-kernel/kheap.o \
+kernel/kalloc.o \
 kernel/io.o \
-driver/framebuffer.o \
+driver/vga.o \
 driver/serial.o \
 driver/timer.o \
 driver/keyboard.o \
@@ -25,9 +23,8 @@ HEADERS = \
 kernel/io.h \
 kernel/gdt.h \
 kernel/idt.h \
-kernel/paging.h \
-kernel/kheap.h \
-driver/framebuffer.h \
+kernel/kalloc.h \
+driver/vga.h \
 driver/serial.h \
 driver/timer.h \
 driver/keyboard.h
@@ -117,7 +114,7 @@ qemu_uefi: $(TARGET).iso
 		-smbios type=0,uefi=on -bios OVMF_BIOS.fd
 
 clean:
-	rm -rf $(OBJS) $(TARGET).elf $(TARGET).iso com1.out  *.s *.o *.out *.elf *.iso $(ISO_DIR) 
+	rm -rf $(OBJS) $(TARGET).elf $(TARGET).iso com1.out  *.s *.o *.out *.elf *.iso *.sym $(ISO_DIR) 
 	rm -rf $(LIBCRANK_OBJS) $(LIBCRANK_TARGET)
 	
 .PHONY: clean bochs qemu

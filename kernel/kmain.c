@@ -16,11 +16,10 @@
 #include "io.h"
 #include "gdt.h"
 #include "idt.h"
-#include "paging.h"
-#include "kheap.h"
+#include "kalloc.h"
 #include "multiboot2.h"
 
-#include "driver/framebuffer.h"
+#include "driver/vga.h"
 #include "driver/serial.h"
 #include "driver/timer.h"
 #include "driver/keyboard.h"
@@ -41,20 +40,21 @@ void putchar(char c)
   serial_write(c);
 }
 
+void on_page_fault() {}
+
 void kmain(unsigned int magic_number, multiboot_info_t* mbi)
 {
   serial_init();
   gdt_init();
   idt_init();
-  // paging_init();
-
+  
   if (magic_number != MULTIBOOT2_BOOTLOADER_MAGIC) {
-    printf("Something is wrong with multiboot magic number: %x\nIt should be: %x\n", magic_number, MULTIBOOT2_BOOTLOADER_MAGIC);
+    printf("[ERROR] Something is wrong with multiboot magic number: %x\nIt should be: %x\n", magic_number, MULTIBOOT2_BOOTLOADER_MAGIC);
     while(1) {}
     return;
   }
 
-  printf("MBI_SIZE: %d\n", mbi->total_size);
+  printf("[INFO] MBI_SIZE: %d\n", mbi->total_size);
 
   // multiboot info contains array of tags ie terminated by tag.type = 0, tag.size = 8
   unsigned int tag_addr = (unsigned int) &mbi->tags;
@@ -91,13 +91,8 @@ void kmain(unsigned int magic_number, multiboot_info_t* mbi)
       } break;
 
       case MULTIBOOT_TAG_TYPE_FRAMEBUFFER: {
-        struct multiboot_tag_framebuffer_common* fb = (void*) tag;
-        printf("> FB ADDR: %x\n", fb->framebuffer_addr);
-        printf("> FB PITCH: %d\n", fb->framebuffer_pitch);
-        printf("> FB WIDTH: %d\n", fb->framebuffer_width);
-        printf("> FB HEIGHT: %d\n", fb->framebuffer_height);
-        printf("> FB BPP: %d\n", fb->framebuffer_bpp);
-        printf("> FB TYPE: %d\n", fb->framebuffer_type);
+        struct multiboot_tag_framebuffer_common* t = (void*) tag;
+        vga_init(t);
       } break;
 
       case MULTIBOOT_TAG_TYPE_ACPI_OLD: {
@@ -107,14 +102,29 @@ void kmain(unsigned int magic_number, multiboot_info_t* mbi)
       } break;
 
       default: {
-        printf("Tag type not handled by parser: %d\n", tag->type);
+        printf("[WARN] MBI type <%d> not handled by parser\n", tag->type);
       }
     }
     tag_addr += MULTIBOOT_ALIGN_TAG(tag->size);
   } while (!(tag->type == 0 && tag->size == 8));
 
-  printf("MBI SIZE CHECK: %d", (unsigned int) tag_addr - (unsigned int)mbi);
-  
+  unsigned int mbi_size = (unsigned int) tag_addr - (unsigned int)mbi;
+  if (mbi_size != mbi->total_size) {
+    printf("[ERROR] MBI SIZE CHECK FAILED: Expected <%d>  Got: <%d>\n", mbi->total_size, mbi_size);
+    while(1) {}
+  }
+
+  for (int y = 0; y < vga.height; y++) {
+    for (int x = 0; x < vga.width; x++) {
+      unsigned int xc = (x * 256) / vga.width;
+      unsigned int yc = (y * 256) / vga.height;
+      vga_color_t color = {xc, yc, 0xff};
+      vga_setpixel(x, y, color);
+    }
+  }
+
+  vga_flush();
+ 
   // we don't want to get out of kmain so Kernel can listen to i/o events or interrupts
   while(1) {}
 }
