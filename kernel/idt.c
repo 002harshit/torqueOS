@@ -38,6 +38,7 @@ void pic_acknowledge(unsigned int interrupt){
 		outb(PIC_1_COMMAND_PORT, PIC_ACKNOWLEDGE);
 	} else {
 		outb(PIC_2_COMMAND_PORT, PIC_ACKNOWLEDGE);
+		outb(PIC_1_COMMAND_PORT, PIC_ACKNOWLEDGE);
 	}
 }
 
@@ -57,7 +58,7 @@ void pic_remap(int offset1, int offset2){
 	outb(PIC_1_DATA, 0b11111100);
 	outb(PIC_2_DATA, 0xFF);
 
-	__asm__("sti");
+	__asm__ __volatile__("sti");
 }
 
 extern void on_timer_interrupt();
@@ -105,7 +106,7 @@ void idt_init()
   set_idt(14, (unsigned int) interrupt_handler_14, IDT_FLAGS, 0x08);
 
   idt.address = (unsigned int ) &idt_descriptors;
-  idt.size = sizeof(struct IdtDescriptor) * IDT_DESCRIPTORS_COUNT;
+  idt.size = sizeof(struct IdtDescriptor) * IDT_DESCRIPTORS_COUNT - 1;
   load_idt((unsigned int)&idt);
   pic_remap(PIC_1_OFFSET, PIC_2_OFFSET);
 }
