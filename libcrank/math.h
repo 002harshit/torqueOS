@@ -1,13 +1,11 @@
 #ifndef CRANK_MATH_H
 #define CRANK_MATH_H
 
-#ifndef PI
-#define PI 3.1415926535897932384626433832795
-#endif // PI
+#define M_PI 3.14159265358979323846264338327950288
+#define M_E 2.71828182845904523536028747135266250
 
-#ifndef EPSILON
-#define EPSILON 0.00001
-#endif // EPSILON
+#define NAN 0.0 / 0.0
+#define INFINITY 1.0 / 0.0
 
 typedef struct {
 	float x, y;
@@ -29,25 +27,28 @@ float floorf(float x);
 float fabsf(float x);
 float fminf(float x, float y);
 float fmaxf(float x, float y);
+float powf(float x, float y);
+float sqrtf(float x);
+
 float tanf(float x);
 float sinf(float x);
 float cosf(float x);
+float atanf(float x);
+float asinf(float x);
+float acosf(float x);
 float atan2f(float y, float x);
-float sqrtf(float x);
-
 
 // FLOATS DECL
 float fsq(float f);
 float deg_to_rad(float angle_rad);
 float fwrap(float value, float min, float max);
-int fequal(float x, float y);
+int fequal(float x, float y, float epsilon);
 float fclamp(float value, float min, float max);
 float flerp(float a, float b, float t);
 float fnormalize(float value, float min, float max);
 float fremap(float value, float smin, float smax, float emin, float emax);
 
 // VEC2 DECL
-
 vec2_t vec2(float x, float y);
 vec2_t vec2_zero();
 vec2_t vec2_add(vec2_t a, vec2_t b);
@@ -63,7 +64,7 @@ float vec2_distsq(vec2_t a, vec2_t b);
 float vec2_dist(vec2_t a, vec2_t b);
 vec2_t vec2_wrap(vec2_t value, vec2_t min, vec2_t max);
 vec2_t vec2_wrap2(vec2_t value, float min, float max);
-int vec2_is_almost_eq(vec2_t a, vec2_t b);
+int vec2_equal(vec2_t a, vec2_t b, float epsilon);
 vec2_t vec2_clamp(vec2_t value, vec2_t min, vec2_t max);
 vec2_t vec2_clamp2(vec2_t value, float min, float max);
 vec2_t vec2_lerp(vec2_t a, vec2_t b, float t);
@@ -89,7 +90,8 @@ float vec3_lensq(vec3_t a);
 float vec3_len(vec3_t a);
 float vec3_distsq(vec3_t a, vec3_t b);
 float vec3_dist(vec3_t a, vec3_t b);
-int vec3_is_equal(vec3_t a, vec3_t b);
+int vec3_equal(vec3_t a, vec3_t b, float epsilon);
+vec3_t vec3_clamp(vec3_t value, float min, float max);
 vec3_t vec3_lerp(vec3_t a, vec3_t b, float t);
 vec3_t vec3_min(vec3_t a, vec3_t b);
 vec3_t vec3_max(vec3_t a, vec3_t b);

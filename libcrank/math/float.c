@@ -7,7 +7,7 @@ float fsq(float f)
 
 float deg_to_rad(float angle_rad)
 {
-	return angle_rad * PI / 180.0;
+	return angle_rad * M_PI / 180.0;
 }
 
 float fwrap(float value, float min, float max)
@@ -15,9 +15,9 @@ float fwrap(float value, float min, float max)
 	return value - (max - min) * floorf((value - min) / (max - min));
 }
 
-int fequal(float x, float y)
+int fequal(float x, float y, float epsilon)
 {
-	return (fabsf(x - y)) <= (EPSILON * fmaxf(1.0f, fmaxf(fabsf(x), fabsf(y))));
+	return (fabsf(x - y)) <= (epsilon * fmaxf(1.0f, fmaxf(fabsf(x), fabsf(y))));
 }
 
 float fclamp(float value, float min, float max)

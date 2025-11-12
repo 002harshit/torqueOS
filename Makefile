@@ -34,6 +34,7 @@ LIBCRANK_DIR=libcrank
 
 LIBCRANK_OBJS = \
 $(LIBCRANK_DIR)/math/basic.o \
+$(LIBCRANK_DIR)/math/trig.o \
 $(LIBCRANK_DIR)/math/float.o \
 $(LIBCRANK_DIR)/math/mat4.o \
 $(LIBCRANK_DIR)/math/vec2.o \
@@ -61,7 +62,8 @@ $(LIBCRANK_DIR)/string.h \
 $(LIBCRANK_DIR)/math.h
 
 CFLAGS ?=
-CFLAGS += -std=gnu99 -ffreestanding -O0 -Wall -Wextra -g -ggdb
+CFLAGS += -std=gnu99 -ffreestanding -nostdlib -O0 -Wall -Wextra -g -ggdb
+CFLAGS += 
 CFLAGS += -I./
 CFLAGS +=-masm=intel
 

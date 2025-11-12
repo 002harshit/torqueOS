@@ -70,9 +70,14 @@ float vec3_dist(vec3_t a, vec3_t b)
 	return sqrtf(vec3_distsq(a, b));
 }
 
-int vec3_is_equal(vec3_t a, vec3_t b)
+int vec3_equal(vec3_t a, vec3_t b, float epsilon)
 {
-	return fequal(a.x, b.x) && fequal(a.y, b.y) && fequal(a.z, b.z);
+	return fequal(a.x, b.x, epsilon) && fequal(a.y, b.y, epsilon) && fequal(a.z, b.z, epsilon);
+}
+
+vec3_t vec3_clamp(vec3_t value, float min, float max)
+{
+	return (vec3_t){fclamp(value.x, min, max), fclamp(value.y, min, max), fclamp(value.z, min, max)};
 }
 
 vec3_t vec3_lerp(vec3_t a, vec3_t b, float t)

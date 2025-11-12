@@ -75,9 +75,9 @@ vec2_t vec2_wrap2(vec2_t value, float min, float max)
 	return (vec2_t){fwrap(value.x, min, max), fwrap(value.y, min, max)};
 }
 
-int vec2_is_almost_eq(vec2_t a, vec2_t b)
+int vec2_equal(vec2_t a, vec2_t b, float epsilon)
 {
-	return fequal(a.x, b.x) && fequal(a.y, b.y);
+	return fequal(a.x, b.x, epsilon) && fequal(a.y, b.y, epsilon);
 }
 
 vec2_t vec2_clamp(vec2_t value, vec2_t min, vec2_t max)
@@ -87,7 +87,7 @@ vec2_t vec2_clamp(vec2_t value, vec2_t min, vec2_t max)
 
 vec2_t vec2_clamp2(vec2_t value, float min, float max)
 {
-	return (vec2_t){fclamp(value.x, min, max), fwrap(value.y, min, max)};
+	return (vec2_t){fclamp(value.x, min, max), fclamp(value.y, min, max)};
 }
 
 vec2_t vec2_lerp(vec2_t a, vec2_t b, float t)
