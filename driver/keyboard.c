@@ -1,5 +1,6 @@
 #include "keyboard.h"
 #include "kernel/io.h"
+#include "libcrank/std.h"
 
 #define RELEASED_OFFSET 0x80
 #define IS_RELEASED(c) (c > RELEASED_OFFSET)
@@ -64,7 +65,21 @@ char kb_is_key_pressed(unsigned char code)
   return kb_pressed[code];
 }
 
-void kb_init() {}
+void kb_init()
+{
+  // Reference: https://github.com/AlgorithMan-de/wyoos/blob/master/src/drivers/keyboard.cpp
+  while (inb(0x64) & 0x1) {
+    char _ = inb(0x60); // read key
+  }
+  outb(0x64, 0xae); // start interrupts
+  outb(0x64, 0x20); // ask to read keyboard controller command byte
+  unsigned char status = (inb(0x60)  | 1) & ~0x10; // clear bit-4
+  outb(0x64, 0x60); // set controller command byte
+  outb(0x60, status);
+  outb(0x60, 0xf4);
+
+  printf("[INFO] Initialized Onboard Keyboard Driver\n");
+}
 
 void kb_set_callback(KeyboardCallback handler)
 {
