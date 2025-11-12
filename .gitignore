@@ -7,6 +7,7 @@
 *.a
 *.so
 *.sym
+_demos/
 iso/*
 bochslog.txt
 bx_enh_dbg.ini

@@ -18,6 +18,7 @@ driver/vga.o \
 driver/serial.o \
 driver/timer.o \
 driver/keyboard.o \
+demos/spinning_donut.o \
 
 HEADERS = \
 kernel/io.h \

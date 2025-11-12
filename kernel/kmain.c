@@ -42,12 +42,16 @@ void putchar(char c)
 
 void on_page_fault() {}
 
+int keyboard_data_pending(void) {
+    return inb(0x64) & 0x01;
+}
+
+void spinning_donut_demo();
 void kmain(unsigned int magic_number, multiboot_info_t* mbi)
 {
   serial_init();
   gdt_init();
   idt_init();
-  
   if (magic_number != MULTIBOOT2_BOOTLOADER_MAGIC) {
     printf("[ERROR] Something is wrong with multiboot magic number: %x\nIt should be: %x\n", magic_number, MULTIBOOT2_BOOTLOADER_MAGIC);
     while(1) {}
@@ -114,17 +118,14 @@ void kmain(unsigned int magic_number, multiboot_info_t* mbi)
     while(1) {}
   }
 
-  for (int y = 0; y < vga.height; y++) {
-    for (int x = 0; x < vga.width; x++) {
-      unsigned int xc = (x * 256) / vga.width;
-      unsigned int yc = (y * 256) / vga.height;
-      vga_color_t color = {xc, yc, 0xff};
-      vga_setpixel(x, y, color);
-    }
-  }
+  // BUG: PIC stops sending keyboard interrupts after timer_start
+  // This only occurs when timer's interrupt handler does a computation heavy task
+  // which blocks other interrupts with less priority
+  // timer_start(62);
 
-  vga_flush();
- 
+  kb_init();
+  spinning_donut_demo(); 
+
   // we don't want to get out of kmain so Kernel can listen to i/o events or interrupts
   while(1) {}
 }
