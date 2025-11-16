@@ -1,4 +1,4 @@
-#include "kernel/gdt.h"
+#include <arch/x86/gdt.h>
 
 enum {
   SEGMENT_INDEX_NULL = 0,

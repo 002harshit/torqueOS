@@ -1,6 +1,8 @@
-#include "keyboard.h"
-#include "kernel/io.h"
-#include "libcrank/std.h"
+#include <arch/x86/io.h>
+
+#include <libcrank/std.h>
+
+#include "./kb_ps2.h"
 
 #define RELEASED_OFFSET 0x80
 #define IS_RELEASED(c) (c > RELEASED_OFFSET)

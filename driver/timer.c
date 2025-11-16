@@ -1,5 +1,6 @@
-#include "timer.h"
-#include "kernel/io.h"  
+#include <arch/x86/io.h>
+
+#include "./timer.h"
 
 static void _default_handler() {}
 static TimerCallback timer_handler = _default_handler;

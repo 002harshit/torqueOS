@@ -3,19 +3,12 @@
 - I'll rewrite it after I get familiar with OSDev and how things work
 
 # Milestone
-- [x] Setting up a Cross-Toolchain
-- [x] Create a minimal kernel that boots using grub
-- [x] Terminal Support
-- [x] Implement minimal c library
+- [ ] Implement USB Driver for keyboard and mouse
+- [ ] Trap/Exception Handler
+- [ ] RAMFS
 - [ ] Stack Smashing Protector
-- [ ] Access multiboot info
-- [x] Enable GDT
-- [x] Memory Management (malloc, free)
-- [x] Enable Interrupts
-- [x] Read Keyboard inputs
-- [x] Boot using Multiboot2
+- [ ] Memory Management (malloc, free)
 - [ ] Multithreaded kernel
-- [ ] Use Minidbg as internal debugger
 - [ ] Filesystem Support
 
 # References

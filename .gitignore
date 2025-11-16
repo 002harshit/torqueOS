@@ -7,6 +7,8 @@
 *.a
 *.so
 *.sym
+*.bc
+*.db
 _demos/
 iso/*
 bochslog.txt

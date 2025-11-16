@@ -3,7 +3,7 @@
 #include "libcrank/math.h"
 #include "kernel/kalloc.h"
 #include "driver/timer.h"
-#include "driver/keyboard.h"
+#include "driver/kb_ps2.h"
 #include "driver/vga.h"
 
 #define NEAR 0.001f

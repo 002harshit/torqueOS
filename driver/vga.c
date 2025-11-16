@@ -1,15 +1,21 @@
-#include "vga.h"
-#include "kernel/kalloc.h"
-#include "libcrank/std.h"
+#include <kernel/kalloc.h>
+
+#include <libcrank/std.h>
+
+#include "./vga.h"
 
 #define DEBUG_COLOR (vga_color_t) {.r = 1, .g = 0, .b = 1} /* magenta */
 
 vga_framebuffer_t vga = {0};
 
+// INFO: the name of driver 'vga' might be wrong or confusing because the only thing is does is interact with
+// the MM I/O linear framebuffer ie setup by BIOS which uses either GOP (in x86_64) or VBE (in x86) under the hood
+
 void vga_init(const struct multiboot_tag_framebuffer_common* mbi_fb)
 {
   // right now only rgb framebuffer is implemented
   if (mbi_fb->framebuffer_type != MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
+    printf("[WARN] Failed to initialize vga driver, got fb of type: %d\n", mbi_fb->framebuffer_type);
     return;
   }
   vga.width = mbi_fb->framebuffer_width;

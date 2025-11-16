@@ -1,7 +1,7 @@
 #ifndef DRIVER_VGA_FRAMEBUFFER_H
 #define DRIVER_VGA_FRAMEBUFFER_H
 
-#include "kernel/multiboot2.h"
+#include <kernel/multiboot2.h>
 
 typedef struct {
   unsigned char r, g, b;

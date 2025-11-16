@@ -5,72 +5,54 @@ LD=$(TOOLCHAIN)ld
 
 TARGET=torque
 
-OBJS = \
-kernel/loader.s.o \
-kernel/kmain.o \
-kernel/gdt.s.o \
-kernel/gdt.o \
-kernel/idt.s.o \
-kernel/idt.o \
-kernel/kalloc.o \
-kernel/io.o \
-driver/vga.o \
-driver/serial.o \
-driver/timer.o \
-driver/keyboard.o \
-demos/spinning_donut.o \
 
-HEADERS = \
-kernel/io.h \
-kernel/gdt.h \
-kernel/idt.h \
-kernel/kalloc.h \
-driver/vga.h \
-driver/serial.h \
-driver/timer.h \
-driver/keyboard.h
+C_SOURCES =
+C_SOURCES += $(wildcard arch/x86/*.c)
+C_SOURCES += $(wildcard driver/*.c)
+C_SOURCES += $(wildcard kernel/*.c)
+C_SOURCES += demos/spinning_donut.c
+
+ASM_SOURCES =
+ASM_SOURCES += $(wildcard kernel/*.asm)
+ASM_SOURCES += $(wildcard arch/x86/*.asm)
+
+HEADERS =
+HEADERS += $(wildcard libcrank/*.h)
+HEADERS += $(wildcard arch/x86/*.h)
+HEADERS += $(wildcard kernel/*.h)
+
+OBJS =
+OBJS += $(C_SOURCES:.c=.o)
+OBJS += $(ASM_SOURCES:.asm=.s.o)
 
 LIBCRANK_TARGET=libcrank.a
-LIBCRANK_DIR=libcrank
 
-LIBCRANK_OBJS = \
-$(LIBCRANK_DIR)/math/basic.o \
-$(LIBCRANK_DIR)/math/trig.o \
-$(LIBCRANK_DIR)/math/float.o \
-$(LIBCRANK_DIR)/math/mat4.o \
-$(LIBCRANK_DIR)/math/vec2.o \
-$(LIBCRANK_DIR)/math/vec3.o \
-$(LIBCRANK_DIR)/std/memcmp.o \
-$(LIBCRANK_DIR)/std/memcpy.o \
-$(LIBCRANK_DIR)/std/memset.o \
-$(LIBCRANK_DIR)/std/printf.o \
-$(LIBCRANK_DIR)/string/strcat.o \
-$(LIBCRANK_DIR)/string/strchr.o \
-$(LIBCRANK_DIR)/string/strcmp.o \
-$(LIBCRANK_DIR)/string/strcpy.o  \
-$(LIBCRANK_DIR)/string/strlen.o \
-$(LIBCRANK_DIR)/string/strncat.o \
-$(LIBCRANK_DIR)/string/strncmp.o \
-$(LIBCRANK_DIR)/string/strncpy.o \
-$(LIBCRANK_DIR)/string/strrchr.o \
-$(LIBCRANK_DIR)/string/strstr.o \
-$(LIBCRANK_DIR)/string/strtok.o
+LIBCRANK_SOURCES = 
+LIBCRANK_SOURCES += $(wildcard libcrank/std/*.c)
+LIBCRANK_SOURCES += $(wildcard libcrank/string/*.c)
+LIBCRANK_SOURCES += $(wildcard libcrank/math/*.c)
 
-LIBCRANK_HEADERS = \
-$(LIBCRANK_DIR)/types.h \
-$(LIBCRANK_DIR)/std.h \
-$(LIBCRANK_DIR)/string.h \
-$(LIBCRANK_DIR)/math.h
+LIBCRANK_OBJS += $(LIBCRANK_SOURCES:.c=.o)
+
+LIBCRANK_HEADERS = $(wildcard libcrank/*.h)
 
 CFLAGS ?=
 CFLAGS += -std=gnu99 -ffreestanding -nostdlib -O0 -Wall -Wextra -g -ggdb
-CFLAGS += 
 CFLAGS += -I./
-CFLAGS +=-masm=intel
+CFLAGS += -masm=intel
 
 QEMU_IMG = qemu_disk.qcow2
 
 ISO_DIR = iso
+
+# for ikos static analysing
+LLVM_BC =$(C_SOURCES:.c=.bc)
+LLVM_BC +=$(LIBCRANK_SOURCES:.c=.bc)
+CLANG_IKOS_FLAGS = $(CFLAGS)
+CLANG_IKOS_FLAGS += -D_FORTIFY_SOURCE=0 -D__IKOS__ -g -O0 -Xclang -disable-O0-optnone
+CLANG_IKOS_FLAGS += -target i386-elf -march=i386
+IKOS_REPORT = report.db
+LLVM_BC_OUTPUT = torque.bc
 
 all: $(TARGET).iso
 
@@ -119,5 +101,28 @@ qemu_uefi: $(TARGET).iso
 clean:
 	rm -rf $(OBJS) $(TARGET).elf $(TARGET).iso com1.out  *.s *.o *.out *.elf *.iso *.sym $(ISO_DIR) 
 	rm -rf $(LIBCRANK_OBJS) $(LIBCRANK_TARGET)
+	rm -rf $(LLVM_BC) $(IKOS_REPORT) $(LLVM_BC_OUTPUT)
 	
-.PHONY: clean bochs qemu
+# for my setup /dev/sda is path to my pendrive
+FLASH_PATH ?=
+ifeq ($(FLASH_PATH), )
+flash:
+	@echo "[ERROR] execute this command like so: FLASH_PATH=/dev/sda make flash"
+else
+flash:
+	sudo dd if=$(TARGET).iso of=$(FLASH_PATH) bs=4M status=progress oflag=sync
+endif
+
+%.bc: %.c $(HEADERS) $(LIBCRANK_HEADERS)
+	clang-14  $(CLANG_IKOS_FLAGS) -emit-llvm -c $< -o $@
+
+$(LLVM_BC_OUTPUT): $(LLVM_BC)
+	llvm-link-14 $(LLVM_BC) -o $(LLVM_BC_OUTPUT)
+
+$(IKOS_REPORT): $(LLVM_BC_OUTPUT)
+	ikos $(LLVM_BC_OUTPUT) --entry-points=kmain --no-libc -o $(IKOS_REPORT)
+
+ikos: $(IKOS_REPORT)
+	ikos-view $(IKOS_REPORT)
+
+.PHONY: clean bochs qemu flash ikos
