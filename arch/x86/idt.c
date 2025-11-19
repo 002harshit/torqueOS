@@ -21,7 +21,7 @@
 
 #define PIC_ICW4_8086 0x01
 
-#define PIC_1_INTERRUPT(code) (PIC_1_OFFSET + code)
+#define PIC_INTERRUPT(code) (PIC_1_OFFSET + code)
 #define CODE_SEGMENT_OFFSET 0x08
 
 #define IDT_DESCRIPTORS_COUNT 256
@@ -46,8 +46,10 @@ void pic_remap(int offset1, int offset2){
 	// starts the initialization sequence (in cascade mode)
 	outb(PIC_1_COMMAND, PIC_ICW1_INIT + PIC_ICW1_ICW4);
 	outb(PIC_2_COMMAND, PIC_ICW1_INIT + PIC_ICW1_ICW4);
+
 	outb(PIC_1_DATA, offset1);
 	outb(PIC_2_DATA, offset2);
+
 	outb(PIC_1_DATA, 4);
 	outb(PIC_2_DATA, 2);
 
@@ -55,24 +57,33 @@ void pic_remap(int offset1, int offset2){
 	outb(PIC_2_DATA, PIC_ICW4_8086);
 
 	// Setup Interrupt Mask Register (IMR)
-	outb(PIC_1_DATA, 0b11111100);
-	outb(PIC_2_DATA, 0xFF);
+  // 1=masked, 0=unmasked
+  #define MASK_TIMER    0b11111110
+  #define MASK_KEYBOARD 0b11111101
+  #define MASK_IRQ2     0b11111011 /* IRQ2 must be enabled for ps/2 mouse to work */
+  #define MASK_MOUSE    0b11101111
+	outb(PIC_1_DATA, MASK_IRQ2 & MASK_KEYBOARD & MASK_TIMER);
+	outb(PIC_2_DATA, MASK_MOUSE);
 
 	__asm__ __volatile__("sti");
 }
 
 extern void on_timer_interrupt();
 extern void on_keyboard_interrupt();
+extern void on_mouse_interrupt();
 extern void on_page_fault();
 
 void interrupt_handler(__attribute__((unused)) struct CpuState cpu, unsigned int interrupt, __attribute__((unused)) struct StackState stack)
 {
   switch (interrupt) {
-    case PIC_1_INTERRUPT(0): {
+    case PIC_INTERRUPT(0): {
       on_timer_interrupt();
     } break;
-    case PIC_1_INTERRUPT(1): {
+    case PIC_INTERRUPT(1): {
       on_keyboard_interrupt();
+    } break;
+    case 44: {
+      on_mouse_interrupt();
     } break;
     case 14: {
       on_page_fault();
@@ -92,9 +103,9 @@ static void set_idt(int index, unsigned int offset, unsigned char flags, unsigne
 	idt_descriptors[index].offset_high = (offset >> 16) & 0xffff;
 }
 
-/* PIC_1_OFFSET + 1 = 33 */
 extern void interrupt_handler_33();
 extern void interrupt_handler_32();
+extern void interrupt_handler_44();
 extern void interrupt_handler_14();
 
 static struct Idt idt;
@@ -103,6 +114,7 @@ void idt_init()
 {
   set_idt(32, (unsigned int) interrupt_handler_32, IDT_FLAGS, 0x08);
   set_idt(33, (unsigned int) interrupt_handler_33, IDT_FLAGS, 0x08);
+  set_idt(44, (unsigned int) interrupt_handler_44, IDT_FLAGS, 0x08);
   set_idt(14, (unsigned int) interrupt_handler_14, IDT_FLAGS, 0x08);
 
   idt.address = (unsigned int ) &idt_descriptors;

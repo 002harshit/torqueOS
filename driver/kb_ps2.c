@@ -2,6 +2,7 @@
 
 #include <libcrank/std.h>
 
+#include "./ps2.h"
 #include "./kb_ps2.h"
 
 #define RELEASED_OFFSET 0x80
@@ -41,7 +42,7 @@ const char shift_ascii_keymap[256] = {
 
 static unsigned char read_keycode()
 {
-  unsigned char code = inb(0x60);
+  unsigned char code = inb(PS2_DATA_PORT);
   if (IS_RELEASED(code)) {
     kb_pressed[code - RELEASED_OFFSET] = 0;
   } else {
@@ -69,16 +70,20 @@ char kb_is_key_pressed(unsigned char code)
 
 void kb_init()
 {
-  // Reference: https://github.com/AlgorithMan-de/wyoos/blob/master/src/drivers/keyboard.cpp
-  while (inb(0x64) & 0x1) {
-    char _ = inb(0x60); // read key
-  }
-  outb(0x64, 0xae); // start interrupts
-  outb(0x64, 0x20); // ask to read keyboard controller command byte
-  unsigned char status = (inb(0x60)  | 1) & ~0x10; // clear bit-4
-  outb(0x64, 0x60); // set controller command byte
-  outb(0x60, status);
-  outb(0x60, 0xf4);
+  ps2_outb(PS2_COMMAND_PORT, PS2_ENABLE_KEYBOARD);
+
+  ps2_outb(PS2_COMMAND_PORT, PS2_CONFIG_READ);
+  unsigned char config = ps2_inb(PS2_DATA_PORT) | 0x01; // enable irq for ps/2 keyboard
+
+  ps2_outb(PS2_COMMAND_PORT, PS2_CONFIG_WRITE);
+  ps2_outb(PS2_DATA_PORT, config);
+
+  unsigned char ack;
+  ps2_outb(PS2_DATA_PORT, PS2_RESETS_NO_TEST);
+  ack = ps2_inb(PS2_DATA_PORT);
+
+  ps2_outb(PS2_DATA_PORT, PS2_ENABLE_REPORTING);
+  ack = ps2_inb(PS2_DATA_PORT);
 
   printf("[INFO] Initialized Onboard Keyboard Driver\n");
 }
@@ -88,9 +93,11 @@ void kb_set_callback(KeyboardCallback handler)
   kb_handler = handler;
 }
 
+// TODO: implement better interface to handle keyboard interrupt, by just sending them raw packet to the callback
 void on_keyboard_interrupt()
 {
   unsigned char code = read_keycode();
+  printf("KEY: %x\n", code);
   kb_handler(code, IS_RELEASED(code));
 }
 

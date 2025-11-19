@@ -58,8 +58,10 @@ common_interrupt_handler:
 
 %define INTERRUPT_TIMER 32
 %define INTERRUPT_KEYBOARD 33
-%define INTERRUPT_PAGING 14
+%define INTERRUPT_MOUSE 44
+%define INTERRUPT_PAGE_FAULT 14
 
 no_error_interrupt_handler INTERRUPT_TIMER
 no_error_interrupt_handler INTERRUPT_KEYBOARD
-error_interrupt_handler INTERRUPT_PAGING
+no_error_interrupt_handler INTERRUPT_MOUSE
+error_interrupt_handler INTERRUPT_PAGE_FAULT

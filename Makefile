@@ -5,7 +5,6 @@ LD=$(TOOLCHAIN)ld
 
 TARGET=torque
 
-
 C_SOURCES =
 C_SOURCES += $(wildcard arch/x86/*.c)
 C_SOURCES += $(wildcard driver/*.c)
