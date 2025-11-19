@@ -4,7 +4,7 @@
 
 #include "./vga.h"
 
-#define DEBUG_COLOR (vga_color_t) {.r = 1, .g = 0, .b = 1} /* magenta */
+#define DEBUG_COLOR (vga_color_t) {.r = 255, .g = 0, .b = 255} /* magenta */
 
 vga_framebuffer_t vga = {0};
 
@@ -13,7 +13,10 @@ vga_framebuffer_t vga = {0};
 
 void vga_init(const struct multiboot_tag_framebuffer_common* mbi_fb)
 {
-  // right now only rgb framebuffer is implemented
+  if (!mbi_fb) {
+    printf("[WARN] Framebuffer tag provided is null\n");
+    return;
+  }
   if (mbi_fb->framebuffer_type != MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
     printf("[WARN] Failed to initialize vga driver, got fb of type: %d\n", mbi_fb->framebuffer_type);
     return;
