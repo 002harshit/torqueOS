@@ -9,7 +9,7 @@ C_SOURCES =
 C_SOURCES += $(wildcard arch/x86/*.c)
 C_SOURCES += $(wildcard driver/*.c)
 C_SOURCES += $(wildcard kernel/*.c)
-C_SOURCES += demos/spinning_donut.c
+C_SOURCES += demos/spinning_donut.c demos/cursor.c
 
 ASM_SOURCES =
 ASM_SOURCES += $(wildcard kernel/*.asm)
