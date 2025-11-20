@@ -1,6 +1,6 @@
 TOOLCHAIN ?=$(HOME)/opt/cross_i386-elf/bin/i386-elf-
 CC=$(TOOLCHAIN)gcc
-AS=$(TOOLCHAIN)as
+AR=$(TOOLCHAIN)ar
 LD=$(TOOLCHAIN)ld
 
 TARGET=torque
@@ -36,7 +36,7 @@ LIBCRANK_OBJS += $(LIBCRANK_SOURCES:.c=.o)
 LIBCRANK_HEADERS = $(wildcard libcrank/*.h)
 
 CFLAGS ?=
-CFLAGS += -std=gnu99 -ffreestanding -nostdlib -O0 -Wall -Wextra -g -ggdb
+CFLAGS += -std=gnu99 -ffreestanding -nostdlib -O3 -Wall -Wextra -g -ggdb -m32
 CFLAGS += -I./
 CFLAGS += -masm=intel
 

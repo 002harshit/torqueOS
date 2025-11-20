@@ -20,3 +20,32 @@
 # GNU compiler and utils sources
 - https://gcc.gnu.org/gcc-15/
 - https://www.gnu.org/software/binutils/
+
+# Running torqueOS (hard way)
+- get source of the project
+```
+git clone https://github.com/002harshit/torqueOS
+```
+- [compile or download](https://wiki.osdev.org/GCC_Cross-Compiler) gcc compiler and gnu binutils for i386
+
+- modify variable in Makefile as
+```sh
+TOOLCHAIN=path/to/your/toolchain/bin/i386-elf-
+```
+- install packages to compile and run iso file
+```
+sudo apt install build-essential yasm grub-pc-bin xorriso qemu
+```
+packages name might differ distro to distro
+
+- run makefile in the root folder (should work if everything is fine)
+```
+make qemu
+```
+or
+```
+make qemu_uefi
+```
+
+# Running torqueOS (easy way)
+- that's the neat part, there is no easy way
