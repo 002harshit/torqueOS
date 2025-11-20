@@ -9,7 +9,7 @@ C_SOURCES =
 C_SOURCES += $(wildcard arch/x86/*.c)
 C_SOURCES += $(wildcard driver/*.c)
 C_SOURCES += $(wildcard kernel/*.c)
-C_SOURCES += demos/spinning_donut.c demos/cursor.c
+C_SOURCES += demos/spinning_donut.c demos/cursor.c demos/ramfs_test.c
 
 ASM_SOURCES =
 ASM_SOURCES += $(wildcard kernel/*.asm)
@@ -36,7 +36,7 @@ LIBCRANK_OBJS += $(LIBCRANK_SOURCES:.c=.o)
 LIBCRANK_HEADERS = $(wildcard libcrank/*.h)
 
 CFLAGS ?=
-CFLAGS += -std=gnu99 -ffreestanding -nostdlib -O3 -Wall -Wextra -g -ggdb -m32
+CFLAGS += -std=gnu99 -ffreestanding -nostdlib -O0 -Wall -Wextra -g -ggdb -m32
 CFLAGS += -I./
 CFLAGS += -masm=intel
 

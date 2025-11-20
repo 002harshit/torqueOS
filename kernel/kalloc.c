@@ -1,4 +1,3 @@
-
 extern unsigned int _kernel_end;
 static unsigned int alloc_top = (unsigned int) &_kernel_end;
 

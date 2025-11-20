@@ -28,6 +28,7 @@
 
 #include "./kalloc.h"
 #include "./multiboot2.h"
+#include "./ramfs.h"
 
 void putchar(char c)
 {
@@ -51,6 +52,7 @@ int is_protected_mode()
 
 void spinning_donut_demo();
 void cursor_demo();
+void ramfs_test();
 
 void kmain(unsigned int magic_number, multiboot_info_t* mbi)
 {
@@ -112,6 +114,8 @@ void kmain(unsigned int magic_number, multiboot_info_t* mbi)
   mouse_init();
 
   idt_init();
+
+  ramfs_test();
 
   // BUG: Right now the cursor shows visual artifacts when compiled with optimization higher than -O1
   // there is probably a bug in vga_setpixel or vga_flush
