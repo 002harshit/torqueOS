@@ -4,6 +4,8 @@
 #define MAX_FILENAME_SIZE 32
 #define RAMFS_FILE_MAGIC {'R','A','M','F','S','7','0','S'} /* just some random bs value */
 
+static const char ramfs_magic[] = RAMFS_FILE_MAGIC;
+
 typedef struct {
   // right now file capacity should not be changed once allocated
   // as im not trying to manage memory using some fancy allocators
@@ -32,8 +34,14 @@ int ramfs_make_file(const ramfs_t fs, const char* name, unsigned int max_size);
 void ramfs_delete_file(const ramfs_t fs, int index);
 int ramfs_is_file_valid(const ramfs_t fs, int index);
 char* ramfs_get_data(const ramfs_t fs, int index);
+unsigned int ramfs_write_raw(const ramfs_t fs, int index, const char* data, unsigned int data_size, int should_append);
 
-// data must be null terminated string
+// INFO: if you don't care about duplication of data just use ramfs_make_file and ramfs_write_raw
+// file_data must have the magic at the beginning and file_size must be larger than sizeof(magic) + length(file_data)
+// thats why this function is too unsafe. (rust devs must be crying in corner)
+int ramfs_insert(const ramfs_t fs, const char* file_name, char* file_data, unsigned int file_size, unsigned int file_cap);
+
+// here, data must be null terminated string 
 unsigned int ramfs_write_string(const ramfs_t fs, int index, const char* data, int should_append);
 
 #endif // RAMFS_H
