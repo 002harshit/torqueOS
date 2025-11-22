@@ -8,4 +8,3 @@
 
 section .data
 define_file message_file, "../disk_files/message.txt"
-define_file c8_prog, "../disk_files/1-chip8-logo.ch8"
