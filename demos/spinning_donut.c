@@ -4,13 +4,13 @@
 #include "kernel/kalloc.h"
 #include "driver/timer.h"
 #include "driver/kb_ps2.h"
-#include "driver/vga.h"
+#include "driver/gfx.h"
 
 #define NEAR 0.001f
 #define FAR 100.0f
 
 float angle = 0;
-vga_color_t bg_color = {18, 18, 24};
+gfx_color_t bg_color = {18, 18, 24};
 mat4_t model, view, proj, mvp, model_inv_transpose;
 
 vec3_t light_color = {0.8, 0.8, 0.8};
@@ -34,8 +34,8 @@ static void update_key_callback(unsigned char keycode, char is_released)
 
 void spinning_donut_demo()
 {
-  width = vga.width;
-  height = vga.height;
+  width = _gfx.width;
+  height = _gfx.height;
   depth_buffer = kalloc(sizeof(float) * width * height, 0);
 	view = mat4_lookat_lh(view_pos, vec3_zero(), (vec3_t){0, 1, 0});
 	proj = mat4_perspective(deg_to_rad(70), (float) width / height, NEAR, FAR);
@@ -45,7 +45,7 @@ void spinning_donut_demo()
   printf("[INFO] Press Left-Control to get out of spinning donut demo\n");
   while (!should_exit) {
     angle += 0.1;
-    vga_clear(bg_color);
+    gfx_clear(bg_color);
     for (int k = 0; k < width * height; k++)
       depth_buffer[k] = 1000000;
     model = mat4_rotate_axis((vec3_t){1, 1, 1}, angle);
@@ -56,7 +56,7 @@ void spinning_donut_demo()
     for (size_t i = 0; i < (size_t)torus_triangles_count; i++) {
       draw_triangle(torus_data[i]);
     }
-    vga_flush();
+    gfx_flush();
   }
   printf("[INFO] Exited out of spinning donut loop\n");
 }
@@ -72,7 +72,7 @@ static inline float cal_depth(vec3_t v)
                                     // return fremap(depth, -1, 1, 0, 255);
 }
 
-static inline void _bresenham_low(vec2_t p0, vec2_t p1, vga_color_t color)
+static inline void _bresenham_low(vec2_t p0, vec2_t p1, gfx_color_t color)
 {
   vec2_t d = vec2_sub(p1, p0);
   float yi = 1.0;
@@ -83,7 +83,7 @@ static inline void _bresenham_low(vec2_t p0, vec2_t p1, vga_color_t color)
   float D = (2 * d.y) - d.x;
   float y = p0.y;
   for (float x=p0.x;x< p1.x;x++) {
-    vga_setpixel((int)x, (int)y, color);
+    gfx_setpixel((int)x, (int)y, color);
     if (D > 0) {
       y = y + yi;
       D = D + (2 * (d.y - d.x));
@@ -93,7 +93,7 @@ static inline void _bresenham_low(vec2_t p0, vec2_t p1, vga_color_t color)
   }
 }
 
-static inline void _bresenham_high(vec2_t p0, vec2_t p1, vga_color_t color)
+static inline void _bresenham_high(vec2_t p0, vec2_t p1, gfx_color_t color)
 {
   vec2_t d = vec2_sub(p1, p0);
   float xi = 1.0;
@@ -104,7 +104,7 @@ static inline void _bresenham_high(vec2_t p0, vec2_t p1, vga_color_t color)
   float D = (2 * d.x) - d.y;
   float x = p0.x;
   for (float y=p0.y; y < p1.y; y++) {
-    vga_setpixel((int)x, (int)y, color);
+    gfx_setpixel((int)x, (int)y, color);
     if (D > 0) {
       x = x + xi;
       D = D + (2 * (d.x - d.y));
@@ -116,7 +116,7 @@ static inline void _bresenham_high(vec2_t p0, vec2_t p1, vga_color_t color)
 
 // Bresenham line algorithm
 // Reference: https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
-static void draw_line(float ax, float ay, float bx, float by, vga_color_t color)
+static void draw_line(float ax, float ay, float bx, float by, gfx_color_t color)
 {
   // compiler with hopefully optimize this shit
   vec2_t p0 = {ax, ay};
@@ -172,10 +172,10 @@ void blit_triangle(vec3_t a, vec3_t b, vec3_t c, vec3_t verts[3], vec3_t verts_c
       v_color = vec3_add(v_color, vec3_mulv(verts_color[1], bary.y));
       v_color = vec3_add(v_color, vec3_mulv(verts_color[2], bary.z));
       v_color = vec3_mulv(v_color, 255);
-      vga_color_t color = {v_color.x, v_color.y, v_color.z};
+      gfx_color_t color = {v_color.x, v_color.y, v_color.z};
 
       depth_buffer[y * width + x] = depth;
-      vga_setpixel(x, y, color);
+      gfx_setpixel(x, y, color);
     }
   }
 }
@@ -212,7 +212,7 @@ void draw_triangle(const float triangle[4][3])
 
   }
 
-  vga_color_t white = {255, 255, 255};
+  gfx_color_t white = {255, 255, 255};
   draw_line(final[0].x, final[0].y, final[1].x, final[1].y, white);
   draw_line(final[0].x, final[0].y, final[2].x, final[2].y, white);
   draw_line(final[1].x, final[1].y, final[2].x, final[2].y, white);
@@ -241,8 +241,8 @@ void draw_triangle(const float triangle[4][3])
         v_color = vec3_add(v_color, vec3_mulv(verts_color[1], bary.y));
         v_color = vec3_add(v_color, vec3_mulv(verts_color[2], bary.z));
         v_color = vec3_mulv(v_color, 255);
-        vga_color_t color = {v_color.x, v_color.y, v_color.z};
-        vga_setpixel(x, y, color);
+        gfx_color_t color = {v_color.x, v_color.y, v_color.z};
+        gfx_setpixel(x, y, color);
       }
     }
   }

@@ -17,7 +17,7 @@
 #include <arch/x86/gdt.h>
 #include <arch/x86/idt.h>
 
-#include <driver/vga.h>
+#include <driver/gfx.h>
 #include <driver/serial.h>
 #include <driver/timer.h>
 #include <driver/kb_ps2.h>
@@ -92,7 +92,7 @@ void kmain(unsigned int magic_number, multiboot_info_t* mbi)
 
       case MULTIBOOT_TAG_TYPE_FRAMEBUFFER: {
         struct multiboot_tag_framebuffer_common* t = (void*) tag;
-        vga_init(t);
+        gfx_init(t);
       } break;
 
       default: {
@@ -122,7 +122,7 @@ void kmain(unsigned int magic_number, multiboot_info_t* mbi)
   timer_stop();
 
   // BUG: Right now the cursor shows visual artifacts when compiled with optimization higher than -O1
-  // there is probably a bug in vga_setpixel or vga_flush
+  // there is probably a bug in gfx_setpixel or gfx_flush
   // i should draw pixel using stride = pitch / bytes_per_pixel instead of width
   cursor_demo();
 

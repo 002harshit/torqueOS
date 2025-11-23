@@ -1,4 +1,4 @@
-#include <driver/vga.h>
+#include <driver/gfx.h>
 #include <driver/mouse_ps2.h>
 #include <driver/ps2.h>
 
@@ -34,26 +34,26 @@ void cursor_demo()
   mouse_set_callback(cursor_cb);
   while (1) {
     __asm__ __volatile__("cli");
-    vga_color_t bg = {90, 250, 220};
-    for (int j = 0; j < vga.height; j++) {
-      for (int i = 0; i < vga.width; i++) {
-        vga_setpixel(i, j, bg);
+    gfx_color_t bg = {90, 250, 220};
+    for (int j = 0; j < _gfx.height; j++) {
+      for (int i = 0; i < _gfx.width; i++) {
+        gfx_setpixel(i, j, bg);
       }
     }
     for (int k = 0; k < 10; k++) {
       prev_x = prev_x + (cursor_x - prev_x) * 0.1;
       prev_y = prev_y + (cursor_y - prev_y) * 0.1;
 
-      vga_color_t c = {200, 30, 70};
+      gfx_color_t c = {200, 30, 70};
 
-      for (int j = (int)prev_y; j < vga.height && j < (int)prev_y + 20; j++) {
-        for (int i = (int)prev_x; i < vga.width && i < (int)prev_x + 20; i++) {
-          if (i < 0 || j < 0 || i > vga.width || j > vga.height) continue;
-          vga_setpixel(i, j, c);
+      for (int j = (int)prev_y; j < _gfx.height && j < (int)prev_y + 20; j++) {
+        for (int i = (int)prev_x; i < _gfx.width && i < (int)prev_x + 20; i++) {
+          if (i < 0 || j < 0 || i > _gfx.width || j > _gfx.height) continue;
+          gfx_setpixel(i, j, c);
         }
       }
     }
-    vga_flush();
+    gfx_flush();
     __asm__ __volatile__("sti");
   }
 }
