@@ -1,8 +1,10 @@
 #include <driver/vga.h>
 #include <driver/mouse_ps2.h>
+#include <driver/ps2.h>
 
 #include <libcrank/std.h>
 #include <libcrank/string.h>
+#include <arch/x86/io.h>
 
 static float prev_x = 255;
 static float prev_y = 255;
@@ -20,30 +22,38 @@ static void cursor_cb(mouse_packet_t p)
     y_delta |= 0xFFFFFF00;
   }
   printf("DX: %d, DY: %d\n", x_delta, y_delta);;
-
   cursor_x += (float)x_delta * sensibility;
   cursor_y += (float)-y_delta * sensibility;
 }
 
 void cursor_demo()
 {
+  // BUG: when there are many interrupts, the main loop is blocked until there are no more interrupts
+  // one reason it might produce alot of interrupts is that user moves mouse vigorously like a crazy dude
+  // solution would be to either poll mouse events instead of interrupts or implement multithreading
   mouse_set_callback(cursor_cb);
   while (1) {
+    __asm__ __volatile__("cli");
     vga_color_t bg = {90, 250, 220};
     for (int j = 0; j < vga.height; j++) {
       for (int i = 0; i < vga.width; i++) {
         vga_setpixel(i, j, bg);
       }
     }
-    prev_x = prev_x + (cursor_x - prev_x) * 0.4;
-    prev_y = prev_y + (cursor_y - prev_y) * 0.4;
-    vga_color_t c = {200, 30, 70};
-    for (int j = (int)prev_y; j < vga.height && j < (int)prev_y + 20; j++) {
-      for (int i = (int)prev_x; i < vga.width && i < (int)prev_x + 20; i++) {
-        if (i < 0 || j < 0 || i > vga.width || j > vga.height) continue;
-        vga_setpixel(i, j, c);
+    for (int k = 0; k < 10; k++) {
+      prev_x = prev_x + (cursor_x - prev_x) * 0.1;
+      prev_y = prev_y + (cursor_y - prev_y) * 0.1;
+
+      vga_color_t c = {200, 30, 70};
+
+      for (int j = (int)prev_y; j < vga.height && j < (int)prev_y + 20; j++) {
+        for (int i = (int)prev_x; i < vga.width && i < (int)prev_x + 20; i++) {
+          if (i < 0 || j < 0 || i > vga.width || j > vga.height) continue;
+          vga_setpixel(i, j, c);
+        }
       }
     }
     vga_flush();
+    __asm__ __volatile__("sti");
   }
 }

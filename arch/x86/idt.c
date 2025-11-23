@@ -45,13 +45,22 @@ void pic_acknowledge(unsigned int interrupt){
 void pic_remap(int offset1, int offset2){
 	// starts the initialization sequence (in cascade mode)
 	outb(PIC_1_COMMAND, PIC_ICW1_INIT + PIC_ICW1_ICW4);
+  io_wait();
+
 	outb(PIC_2_COMMAND, PIC_ICW1_INIT + PIC_ICW1_ICW4);
+  io_wait();
 
 	outb(PIC_1_DATA, offset1);
+  io_wait();
+
 	outb(PIC_2_DATA, offset2);
+  io_wait();
 
 	outb(PIC_1_DATA, 4);
+  io_wait();
+
 	outb(PIC_2_DATA, 2);
+  io_wait();
 
 	outb(PIC_1_DATA, PIC_ICW4_8086);
 	outb(PIC_2_DATA, PIC_ICW4_8086);
@@ -92,7 +101,7 @@ void interrupt_handler(__attribute__((unused)) struct CpuState cpu, unsigned int
   pic_acknowledge(interrupt);
 }
 
-static struct IdtDescriptor idt_descriptors[IDT_DESCRIPTORS_COUNT];
+static struct IdtDescriptor idt_descriptors[IDT_DESCRIPTORS_COUNT] = {0};
 
 static void set_idt(int index, unsigned int offset, unsigned char flags, unsigned short segment_selector)
 {

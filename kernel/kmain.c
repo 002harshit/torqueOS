@@ -117,6 +117,10 @@ void kmain(unsigned int magic_number, multiboot_info_t* mbi)
 
   ramfs_test();
 
+  timer_start(62);
+  spinning_donut_demo();
+  timer_stop();
+
   // BUG: Right now the cursor shows visual artifacts when compiled with optimization higher than -O1
   // there is probably a bug in vga_setpixel or vga_flush
   // i should draw pixel using stride = pitch / bytes_per_pixel instead of width
@@ -125,7 +129,6 @@ void kmain(unsigned int magic_number, multiboot_info_t* mbi)
   // BUG: PIC stops sending keyboard interrupts after timer_start
   // This only occurs when timer's interrupt handler does a computation heavy task
   // which blocks other interrupts with less priority
-  // timer_start(62);
 
   // we don't want to get out of kmain so Kernel can listen to i/o events or interrupts
   while(1) {}
