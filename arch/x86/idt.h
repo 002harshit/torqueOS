@@ -1,28 +1,29 @@
 #ifndef IDT_H
 #define IDT_H
-struct CpuState {
-	unsigned int eax;
-	unsigned int ebx;
-	unsigned int ecx;
-	unsigned int edx;
-	unsigned int ebp;
-	unsigned int esi;
+
+struct interrupt_cpu_state_t {
 	unsigned int edi;
+	unsigned int esi;
+	unsigned int ebp;
+	unsigned int edx;
+	unsigned int ecx;
+	unsigned int ebx;
+  unsigned int eax;
 } __attribute__((packed));
 
-struct StackState {
+struct interrupt_stack_state_t {
 	unsigned int error_code;
 	unsigned int eip;
 	unsigned int cs;
 	unsigned int eflags;
 } __attribute__((packed));
 
-struct Idt {
+struct idt_t {
 	unsigned short size;
 	unsigned int address;
 } __attribute__((packed));
 
-struct IdtDescriptor {
+struct idt_descriptor_t {
 	unsigned short offset_low;
 	unsigned short segment_selector;
 	unsigned char zero;
@@ -33,4 +34,5 @@ struct IdtDescriptor {
 void idt_init();
 
 void load_idt(unsigned int idt_address);
+
 #endif // IDT_H

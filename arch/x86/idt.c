@@ -82,9 +82,9 @@ extern void on_keyboard_interrupt();
 extern void on_mouse_interrupt();
 extern void on_page_fault();
 
-void interrupt_handler(__attribute__((unused)) struct CpuState cpu, unsigned int interrupt, __attribute__((unused)) struct StackState stack)
+void interrupt_handler(struct interrupt_cpu_state_t* regs, unsigned int interrupt_code, struct interrupt_stack_state_t* stack)
 {
-  switch (interrupt) {
+  switch (interrupt_code) {
     case PIC_INTERRUPT(0): {
       on_timer_interrupt();
     } break;
@@ -98,18 +98,18 @@ void interrupt_handler(__attribute__((unused)) struct CpuState cpu, unsigned int
       on_page_fault();
     } break;
   }
-  pic_acknowledge(interrupt);
+  pic_acknowledge(interrupt_code);
 }
 
-static struct IdtDescriptor idt_descriptors[IDT_DESCRIPTORS_COUNT] = {0};
+static struct idt_descriptor_t descriptors[IDT_DESCRIPTORS_COUNT] = {0};
 
 static void set_idt(int index, unsigned int offset, unsigned char flags, unsigned short segment_selector)
 {
-	idt_descriptors[index].offset_low = offset & 0xffff;
-	idt_descriptors[index].segment_selector = segment_selector;
-	idt_descriptors[index].zero = 0;
-	idt_descriptors[index].flags = flags;
-	idt_descriptors[index].offset_high = (offset >> 16) & 0xffff;
+	descriptors[index].offset_low = offset & 0xffff;
+	descriptors[index].segment_selector = segment_selector;
+	descriptors[index].zero = 0;
+	descriptors[index].flags = flags;
+	descriptors[index].offset_high = (offset >> 16) & 0xffff;
 }
 
 extern void interrupt_handler_33();
@@ -117,7 +117,7 @@ extern void interrupt_handler_32();
 extern void interrupt_handler_44();
 extern void interrupt_handler_14();
 
-static struct Idt idt;
+static struct idt_t idt;
 
 void idt_init()
 {
@@ -126,8 +126,8 @@ void idt_init()
   set_idt(44, (unsigned int) interrupt_handler_44, IDT_FLAGS, 0x08);
   set_idt(14, (unsigned int) interrupt_handler_14, IDT_FLAGS, 0x08);
 
-  idt.address = (unsigned int ) &idt_descriptors;
-  idt.size = sizeof(struct IdtDescriptor) * IDT_DESCRIPTORS_COUNT - 1;
+  idt.address = (unsigned int ) &descriptors;
+  idt.size = sizeof(struct idt_descriptor_t) * IDT_DESCRIPTORS_COUNT - 1;
   load_idt((unsigned int)&idt);
   pic_remap(PIC_1_OFFSET, PIC_2_OFFSET);
 }

@@ -2,16 +2,13 @@ extern interrupt_handler
 
 global load_idt
 
-; void load_idt(unsigned int idt_ptr);
+; void load_idt(push idt_ptr);
 load_idt:
   mov eax, [esp+4]
   lidt [eax]
   ret
 
-; before calling C interrupt_handler stack state should be
-;   eflags, cs, eip, error_code 
-;   interrupt_code
-;   eax, ebx, ecx, edx, ebp, esi, edi
+; INFO: interrupt pushes eflags, cs, eip, and optionally error_code to the stack
 
 ; pushes error_code, and interrupt_code
 %macro no_error_interrupt_handler 1
@@ -31,7 +28,10 @@ load_idt:
 %endmacro
 
 common_interrupt_handler:
-  ; save registers state
+  ; INFO: specially eax register must not be modified
+  ; because by conventions, it contains return value 
+
+  ; push registers state
 	push eax
 	push ebx
 	push ecx
@@ -40,9 +40,26 @@ common_interrupt_handler:
 	push esi
 	push edi
 
+  ; address to interrupt_cpu_state_t
+  mov edi, esp
+
+  ; value of interrupt code
+  mov esi, [esp + 7 * 4]
+
+  lea edx, [esp + 8 * 4]
+
+  ; x86 uses stack for passing args from right to left 
+  push edx
+  push esi
+  push edi
+
+  ; interrupt_handler(edi, esi, edx)
 	call interrupt_handler
 
-  ; restore registers state
+  ; pop args
+  add esp, 12
+
+  ; pop registers state
 	pop edi
 	pop esi
 	pop ebp
@@ -51,8 +68,11 @@ common_interrupt_handler:
 	pop ebx
 	pop eax
 
-  ; to pop error_code:4byte and interrupt_code:4byte we pushed before 
+  ; pop interrupt_code and error_code
 	add esp, 8
+
+  ; INFO: we did not popped eflags, cs, eip cuz before calling iret
+  ; they must be at the top of stack
 
 	iret
 
