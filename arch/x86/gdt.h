@@ -1,12 +1,12 @@
-#ifndef GDT_H
-#define GDT_H
+#ifndef ARCH_X86_GDT_H
+#define ARCH_X86_GDT_H
 
-struct Gdt {
+struct gdt_t {
   unsigned short size;
   unsigned int address;
 } __attribute__((packed));
 
-struct GdtDescriptor {
+struct gdt_descriptor_t {
   unsigned short limit_low;
   unsigned short base_low;
   unsigned char base_mid;
@@ -17,7 +17,7 @@ struct GdtDescriptor {
 
 void gdt_init();
 
-void gdt_load(struct Gdt gdt);
+void gdt_load(struct gdt_t gdt);
 void gdt_load_registers();
 
-#endif // GDT_H
+#endif // ARCH_X86_GDT_H

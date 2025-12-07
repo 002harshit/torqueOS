@@ -1,5 +1,5 @@
-#ifndef IDT_H
-#define IDT_H
+#ifndef ARCH_X86_IDT_H
+#define ARCH_X86_IDT_H
 
 struct interrupt_cpu_state_t {
 	unsigned int edi;
@@ -35,4 +35,4 @@ void idt_init();
 
 void load_idt(unsigned int idt_address);
 
-#endif // IDT_H
+#endif // ARCH_X86_IDT_H
