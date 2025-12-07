@@ -5,11 +5,17 @@
 ## Milestone
 - [ ] Implement USB Driver for keyboard and mouse
 - [ ] Trap/Exception Handler
-- [ ] RAMFS
-- [ ] Stack Smashing Protector
+- [x] RAMFS
 - [ ] Memory Management (malloc, free)
 - [ ] Multithreaded kernel
 - [ ] Filesystem Support
+
+## Programs i wanna implement in my OS
+- [ ] cli text editor
+- [ ] tga image rendering with cool effects
+- [ ] audio player using pcspk 
+- [ ] bad apple animation + audio
+- [ ] uxn emulator
 
 ## References
 - https://wiki.osdev.org/GCC_Cross-Compiler
