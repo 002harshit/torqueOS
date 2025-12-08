@@ -16,6 +16,7 @@
 #include <arch/x86/io.h>
 #include <arch/x86/gdt.h>
 #include <arch/x86/idt.h>
+#include <arch/x86/paging.h>
 
 #include <driver/gfx.h>
 #include <driver/serial.h>
@@ -34,8 +35,6 @@ void putchar(char c)
 {
   serial_write(c);
 }
-
-void on_page_fault() {}
 
 int is_protected_mode()
 {
@@ -71,7 +70,8 @@ void kmain(unsigned int magic_number, multiboot_info_t* mbi)
   }
 
   gdt_init();
-
+  paging_init();
+  
   printf("[INFO] MBI_SIZE: %d\n", mbi->total_size);
 
   // multiboot info contains array of tags ie terminated by tag.type = 0, tag.size = 8
@@ -92,6 +92,8 @@ void kmain(unsigned int magic_number, multiboot_info_t* mbi)
 
       case MULTIBOOT_TAG_TYPE_FRAMEBUFFER: {
         struct multiboot_tag_framebuffer_common* t = (void*) tag;
+        size_t fb_size = t->framebuffer_pitch * t->framebuffer_height;
+        paging_map_region(t->framebuffer_addr, t->framebuffer_addr + fb_size, 1, 1, 0);
         gfx_init(t);
       } break;
 
@@ -107,6 +109,10 @@ void kmain(unsigned int magic_number, multiboot_info_t* mbi)
     printf("[ERROR] MBI SIZE CHECK FAILED: Expected <%d>  Got: <%d>\n", mbi->total_size, mbi_size);
     while(1) {}
   }
+  
+  paging_map_region((unsigned int) mbi, (unsigned int) mbi + mbi->total_size, 1, 1, 0);
+
+  paging_enable();
 
   // Must be initialized before enabling interrupts
   // TODO: modify kb_init and mouse_init like so it can be initialized after initializing interrupts
@@ -121,14 +127,7 @@ void kmain(unsigned int magic_number, multiboot_info_t* mbi)
   spinning_donut_demo();
   timer_stop();
 
-  // BUG: Right now the cursor shows visual artifacts when compiled with optimization higher than -O1
-  // there is probably a bug in gfx_setpixel or gfx_flush
-  // i should draw pixel using stride = pitch / bytes_per_pixel instead of width
   cursor_demo();
-
-  // BUG: PIC stops sending keyboard interrupts after timer_start
-  // This only occurs when timer's interrupt handler does a computation heavy task
-  // which blocks other interrupts with less priority
 
   // we don't want to get out of kmain so Kernel can listen to i/o events or interrupts
   while(1) {}
