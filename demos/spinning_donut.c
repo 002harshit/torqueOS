@@ -41,10 +41,18 @@ void spinning_donut_demo()
 	proj = mat4_perspective(deg_to_rad(70), (float) width / height, NEAR, FAR);
 
   kb_set_callback(update_key_callback);
+  timer_stop();
+  timer_start(60);
+
+  unsigned long ticks_prev = timer_get_elapsed();
   
   printf("[INFO] Press Left-Control to get out of spinning donut demo\n");
   while (!should_exit) {
-    angle += 0.1;
+    unsigned long ticks_now = timer_get_elapsed();
+    float delta_ms = (ticks_now - ticks_prev) / 1000.0;
+    ticks_prev = ticks_now;
+
+    angle += 2 * delta_ms;
     gfx_clear(bg_color);
     for (int k = 0; k < width * height; k++)
       depth_buffer[k] = 1000000;
@@ -69,7 +77,6 @@ vec3_t viewport(vec3_t v)
 static inline float cal_depth(vec3_t v)
 {
   return ((1.0 / v.z) + 1.0) / 2.0; // from 0 to 1 maybe????
-                                    // return fremap(depth, -1, 1, 0, 255);
 }
 
 static inline void _bresenham_low(vec2_t p0, vec2_t p1, gfx_color_t color)
