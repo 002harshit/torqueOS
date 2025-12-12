@@ -14,7 +14,20 @@ void puts(char* buf)
 
 static void print_int(unsigned int v, int base)
 {
-  char buffer[36];
+  char buffer[40];
+  int len = 0;
+  do {
+    buffer[len++] = '0' + (v % base);
+    v = v / base;
+  } while(v > 0);
+  for (int i = len-1; i > -1; i--) {
+    putchar(buffer[i]);
+  }
+}
+
+static void print_int64(unsigned long long v, int base)
+{
+  char buffer[72];
   int len = 0;
   do {
     buffer[len++] = '0' + (v % base);
@@ -27,7 +40,20 @@ static void print_int(unsigned int v, int base)
 
 static void print_hex(unsigned int v, const char* symbols)
 {
-  char buffer[12];
+  char buffer[16];
+  int len = 0;
+  do {
+    buffer[len++] = symbols[v % 16];
+    v = v / 16;
+  } while (v > 0);
+  for (int i = len-1; i > -1; i--) {
+    putchar(buffer[i]);
+  }
+}
+
+static void print_hex64(unsigned long long v, const char* symbols)
+{
+  char buffer[24];
   int len = 0;
   do {
     buffer[len++] = symbols[v % 16];
@@ -62,6 +88,33 @@ void printf(const char* fmt, ...)
         puts(arg);
       } break;
 
+      case 'l': {
+        p++;
+        if (p[0] == 'd') {
+          long long arg = va_arg(va, long long);
+          if (arg < 0) {
+            putchar('-');
+            arg = -arg;
+          }
+          print_int64(arg, 10);
+        } else if (p[0] == 'u') {
+          unsigned long long arg = va_arg(va, unsigned long long);
+          print_int64(arg, 10);
+        } else if (p[0] == 'x' || p[0] == 'X') {
+          unsigned long long arg = va_arg(va, unsigned long long);
+          const char* hex_symbols =  p[1] == 'x' ? "0123456789abcdef" : "0123456789ABCDEF";
+          puts("0x");
+          print_hex64(arg, hex_symbols);
+        } else if (p[0] == 'b') {
+          unsigned long long arg = va_arg(va, unsigned long long);
+          puts("0b");
+          print_int64(arg, 2);
+        } else {
+          puts("%l");
+          putchar(p[0]);
+        }
+      } break;
+
       case 'd': {
         int arg = va_arg(va, int);
         if (arg < 0) {
@@ -70,7 +123,12 @@ void printf(const char* fmt, ...)
         }
         print_int(arg, 10);
       } break;
-      
+
+      case 'u': {
+        unsigned int arg = va_arg(va, unsigned int);
+        print_int(arg, 10);
+      } break;
+ 
       case 'X':
       case 'x': {
         unsigned int arg = va_arg(va, unsigned int);
@@ -100,6 +158,7 @@ void printf(const char* fmt, ...)
       } break;
 
       default: {
+        putchar('%');
         putchar(p[0]);
       }
     }
