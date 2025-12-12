@@ -18,7 +18,7 @@ struct page_table_t {
 } __attribute__((aligned(FRAME_SIZE)));
 
 extern void load_page_dir(void* dir);
-extern void invlpg_flush_page(unsigned int virtual_address);
+extern void invlpg_flush_page(void* virtual_address);
 
 void paging_init();
 void paging_enable();

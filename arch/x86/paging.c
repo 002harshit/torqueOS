@@ -5,9 +5,6 @@
 static struct page_entry_t _kernel_directory[PDE_COUNT] __attribute__((aligned(FRAME_SIZE)));
 static struct page_table_t _kernel_tables[PDE_COUNT] __attribute__((aligned(FRAME_SIZE)));
 
-extern unsigned int _kernel_end;
-static unsigned int k_end = (unsigned int)&_kernel_end;
-
 void paging_init()
 {
   for (unsigned int i = 0; i < PDE_COUNT; i++) {
@@ -20,7 +17,6 @@ void paging_init()
 
 void paging_enable()
 {
-  paging_map_region(0, k_end, 1, 1, 0);
   load_page_dir(&_kernel_directory);
   printf("[INFO] Enabled paging\n");
 }
@@ -53,7 +49,7 @@ void paging_map_page(unsigned int physical_address, unsigned int is_present, uns
 
   if (should_flush) {
     unsigned int vaddr = frame_index * FRAME_SIZE;
-    invlpg_flush_page(vaddr);
+    invlpg_flush_page((void*) vaddr);
   }
 }
 

@@ -30,6 +30,8 @@
 #include "./kalloc.h"
 #include "./multiboot2.h"
 #include "./ramfs.h"
+#include "./allocator.h"
+#include "./mbi_info.h"
 
 void putchar(char c)
 {
@@ -53,6 +55,8 @@ void spinning_donut_demo();
 void cursor_demo();
 void ramfs_test();
 
+extern unsigned int _kernel_end;
+
 void kmain(unsigned int magic_number, multiboot_info_t* mbi)
 {
   serial_init();
@@ -61,7 +65,7 @@ void kmain(unsigned int magic_number, multiboot_info_t* mbi)
     printf("[ERROR] Something is wrong with multiboot magic number: %x\nIt should be: %x\n", magic_number, MULTIBOOT2_BOOTLOADER_MAGIC);
     while(1) {}
     return;
-  }
+}
 
   if (is_protected_mode()) {
     printf("[INFO] Kernel already in protected mode\n");
@@ -72,50 +76,26 @@ void kmain(unsigned int magic_number, multiboot_info_t* mbi)
   gdt_init();
   paging_init();
   
-  printf("[INFO] MBI_SIZE: %d\n", mbi->total_size);
-
-  // multiboot info contains array of tags ie terminated by tag.type = 0, tag.size = 8
-  unsigned int tag_addr = (unsigned int) &mbi->tags;
-  multiboot_tag_t* tag;
-  do {
-    tag = (multiboot_tag_t*)(tag_addr);
-    switch (tag->type) {
-      case MULTIBOOT_TAG_TYPE_CMDLINE: {
-        struct multiboot_tag_string* t = (void*) tag;
-        printf("[INFO] CMDLINE ARGS: %s\n", t->string);
-      } break;
-
-      case MULTIBOOT_TAG_TYPE_BOOT_LOADER_NAME: {
-        struct multiboot_tag_string* t = (void*) tag;
-        printf("[INFO] BOOT_LOADER_NAME: %s\n", t->string);
-      } break;
-
-      case MULTIBOOT_TAG_TYPE_FRAMEBUFFER: {
-        struct multiboot_tag_framebuffer_common* t = (void*) tag;
-        size_t fb_size = t->framebuffer_pitch * t->framebuffer_height;
-        paging_map_region(t->framebuffer_addr, t->framebuffer_addr + fb_size, 1, 1, 0);
-        gfx_init(t);
-      } break;
-
-      default: {
-        printf("[WARN] MBI type {%d} not handled by parser\n", tag->type);
-      }
+  mbi_parsed_info_t mbi_info = parse_mbi(mbi);
+  {
+    mem_region_t used_regions[8];
+    unsigned int used_regions_len = 0;
+    used_regions[used_regions_len++] = (mem_region_t) {.start = 0, .end = (unsigned long long) &_kernel_end};
+    if ((unsigned long long) mbi >= (unsigned long long) &_kernel_end) {
+      used_regions[used_regions_len++] = (mem_region_t) {.start = (unsigned long long) mbi, .end = (unsigned long long) mbi + mbi->total_size};
     }
-    tag_addr += MULTIBOOT_ALIGN_TAG(tag->size);
-  } while (!(tag->type == 0 && tag->size == 8));
+    unsigned long long fb_size = mbi_info.fb_tag->framebuffer_pitch * mbi_info.fb_tag->framebuffer_height;
+    used_regions[used_regions_len++] = (mem_region_t) {.start = mbi_info.fb_tag->framebuffer_addr, .end = mbi_info.fb_tag->framebuffer_addr + fb_size};
 
-  unsigned int mbi_size = (unsigned int) tag_addr - (unsigned int)mbi;
-  if (mbi_size != mbi->total_size) {
-    printf("[ERROR] MBI SIZE CHECK FAILED: Expected <%d>  Got: <%d>\n", mbi->total_size, mbi_size);
-    while(1) {}
+    allocator_init(mbi_info.mmap_tag, used_regions, used_regions_len);
   }
-  
-  paging_map_region((unsigned int) mbi, (unsigned int) mbi + mbi->total_size, 1, 1, 0);
 
   paging_enable();
 
   // Must be initialized before enabling interrupts
   // TODO: modify kb_init and mouse_init like so it can be initialized after initializing interrupts
+  gfx_init(mbi_info.fb_tag);
+
   kb_init();
   mouse_init();
 

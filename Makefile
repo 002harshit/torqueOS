@@ -87,7 +87,7 @@ qemu: $(TARGET).iso
 		-display sdl,show-cursor=on \
 		-serial mon:stdio
 
-qemu_uefi: $(TARGET).iso
+qemu_x86_64: $(TARGET).iso
 	qemu-system-x86_64 \
 		-m 1G \
 		-smp 2 \
