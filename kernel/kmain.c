@@ -27,7 +27,7 @@
 #include <libcrank/std.h>
 #include <libcrank/string.h>
 
-#include "./kalloc.h"
+#include "./allocator.h"
 #include "./multiboot2.h"
 #include "./ramfs.h"
 #include "./allocator.h"
@@ -92,10 +92,10 @@ void kmain(unsigned int magic_number, multiboot_info_t* mbi)
 
   paging_enable();
 
-  // Must be initialized before enabling interrupts
-  // TODO: modify kb_init and mouse_init like so it can be initialized after initializing interrupts
   gfx_init(mbi_info.fb_tag);
 
+  // Right now mouse and keyboard must be initialized before enabling interrupts
+  // TODO: modify kb_init and mouse_init like so it can be initialized after initializing interrupts
   kb_init();
   mouse_init();
 
@@ -108,6 +108,8 @@ void kmain(unsigned int magic_number, multiboot_info_t* mbi)
   timer_stop();
 
   cursor_demo();
+
+  gfx_close();
 
   // we don't want to get out of kmain so Kernel can listen to i/o events or interrupts
   while(1) {}

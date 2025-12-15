@@ -22,7 +22,7 @@ extern void invlpg_flush_page(void* virtual_address);
 
 void paging_init();
 void paging_enable();
-void paging_map_page(unsigned int physical_address, unsigned int is_present, unsigned int is_writable, int should_flush);
-void paging_map_region(unsigned int paddr_start, unsigned int paddr_end, unsigned int is_present, unsigned int is_writable, int should_flush);
+void paging_map_page(unsigned int physical_address, unsigned int is_present, unsigned int is_writable);
+void paging_map_region(unsigned int paddr_start, unsigned int paddr_end, unsigned int is_present, unsigned int is_writable);
 
 #endif // ARCH_X86_PAGING_H

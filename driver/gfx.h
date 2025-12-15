@@ -18,6 +18,9 @@ typedef struct {
 
 extern gfx_framebuffer_t _gfx;
 
+// TODO: change interface for gfx: store mbi_fb related info in gfx_init
+// and only allocate space for double-buffer in gfx_create
+
 // must be called after retriving multiboot_info
 void gfx_init(const struct multiboot_tag_framebuffer_common* mbi_fb);
 
@@ -29,4 +32,6 @@ void gfx_setpixel(int x, int y, gfx_color_t color);
 gfx_color_t gfx_getpixel(int x, int y);
 void gfx_clear(gfx_color_t color);
 
-#endif // DRIVER_gfx_FRAMEBUFFER_H
+void gfx_close();
+
+#endif // DRIVER_GFX_H

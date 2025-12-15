@@ -1,14 +1,16 @@
 #include "./ramfs.h"
-#include "./kalloc.h"
+#include "./allocator.h"
 
 #include <libcrank/string.h>
+
+// TODO: fix memory leaks, and change interface of ramfs
 
 ramfs_t ramfs_create(unsigned int count)
 {
   if (count < 1) {
     return (ramfs_t) {.files = (void*) 0, .count = 0};
   }
-  ramfs_file_t* files = kalloc(sizeof(ramfs_file_t) * count, 4);
+  ramfs_file_t* files = allocator_malloc(sizeof(ramfs_file_t) * count);
   for (unsigned int i = 0; i < count; i++) {
     files[i].capacity = 0;
     files[i].size = 0;
@@ -16,6 +18,17 @@ ramfs_t ramfs_create(unsigned int count)
     files[i].name[0] = '\0';
   }
   return (ramfs_t) {.files = files, .count = count};
+}
+
+void ramfs_destroy(ramfs_t* fs)
+{
+  for (unsigned int i = 0; i < fs->count; i++) {
+    if (fs->files[i].capacity)
+      allocator_free(fs->files[i].data);
+  }
+  allocator_free(fs->files);
+  fs->files = 0;
+  fs->count = 0;
 }
 
 int ramfs_get_index_from_name(const ramfs_t fs, const char* name)
@@ -60,7 +73,7 @@ static int alloc_file(const ramfs_t fs, unsigned int capacity)
     if (file.capacity != 0) {
       continue;
     }
-    fs.files[i].data = kalloc(capacity, 0);
+    fs.files[i].data = allocator_malloc(capacity);
     return i;
   }
   return -1;

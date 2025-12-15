@@ -4,6 +4,7 @@
 
 static struct page_entry_t _kernel_directory[PDE_COUNT] __attribute__((aligned(FRAME_SIZE)));
 static struct page_table_t _kernel_tables[PDE_COUNT] __attribute__((aligned(FRAME_SIZE)));
+static int is_paging_enabled = 0;
 
 void paging_init()
 {
@@ -17,12 +18,14 @@ void paging_init()
 
 void paging_enable()
 {
+  is_paging_enabled = 1;
   load_page_dir(&_kernel_directory);
   printf("[INFO] Enabled paging\n");
 }
 
-void paging_map_page(unsigned int physical_address, unsigned int is_present, unsigned int is_writable, int should_flush)
+void paging_map_page(unsigned int physical_address, unsigned int is_present, unsigned int is_writable)
 {
+  int should_flush = is_paging_enabled;
   // INFO: strictly assumes identity paging
   unsigned int frame_index = physical_address / FRAME_SIZE;
   unsigned int pde_index = frame_index / PTE_COUNT;
@@ -53,13 +56,13 @@ void paging_map_page(unsigned int physical_address, unsigned int is_present, uns
   }
 }
 
-void paging_map_region(unsigned int paddr_start, unsigned int paddr_end, unsigned int is_present, unsigned int is_writable, int should_flush)
+void paging_map_region(unsigned int paddr_start, unsigned int paddr_end, unsigned int is_present, unsigned int is_writable)
 {
   paddr_start = paddr_start & ~(FRAME_SIZE - 1);
   paddr_end = (paddr_end + FRAME_SIZE - 1) & ~(FRAME_SIZE - 1);
 
   for (unsigned int addr = paddr_start; addr < paddr_end; addr += FRAME_SIZE) {
-    paging_map_page(addr, is_present, is_writable, should_flush);
+    paging_map_page(addr, is_present, is_writable);
   }
 }
 

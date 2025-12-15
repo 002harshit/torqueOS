@@ -25,10 +25,11 @@ typedef struct {
 
 typedef struct {
   ramfs_file_t* files;
-  const unsigned int count;
+  unsigned int count;
 } ramfs_t;
 
 ramfs_t ramfs_create(unsigned int count);
+void ramfs_destroy(ramfs_t* fs);
 int ramfs_get_index_from_name(const ramfs_t fs, const char* name);
 int ramfs_make_file(const ramfs_t fs, const char* name, unsigned int max_size);
 void ramfs_delete_file(const ramfs_t fs, int index);

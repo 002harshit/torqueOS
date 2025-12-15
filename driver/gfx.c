@@ -1,4 +1,4 @@
-#include <kernel/kalloc.h>
+#include <kernel/allocator.h>
 
 #include <libcrank/std.h>
 
@@ -25,7 +25,7 @@ void gfx_init(const struct multiboot_tag_framebuffer_common* mbi_fb)
   _gfx.pitch = mbi_fb->framebuffer_pitch;
   _gfx.bpp = mbi_fb->framebuffer_bpp / 8; // converting bits to bytes
   _gfx.fb = (unsigned char*) mbi_fb->framebuffer_addr;
-  _gfx.buffer = (void*) kalloc(sizeof(gfx_color_t) * _gfx.width * _gfx.height, 0);
+  _gfx.buffer = allocator_malloc(sizeof(gfx_color_t) * _gfx.width * _gfx.height);
   
   printf("[INFO] Initialized gfx _> width: %d, height: %d, bpp: %d, pitch: %d\n", _gfx.width, _gfx.height, _gfx.bpp, _gfx.pitch);
   printf("[INFO] Sucessfully initialized gfx of type: %d\n", mbi_fb->framebuffer_type);
@@ -66,4 +66,9 @@ void gfx_flush()
       _gfx.fb[offset + 2]  = color.r;
     }
   }
+}
+
+void gfx_close()
+{
+  allocator_free(_gfx.buffer); 
 }

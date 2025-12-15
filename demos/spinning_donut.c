@@ -1,7 +1,7 @@
 #include "torus.stl.c"
 #include "libcrank/std.h"
 #include "libcrank/math.h"
-#include "kernel/kalloc.h"
+#include "kernel/allocator.h"
 #include "driver/timer.h"
 #include "driver/kb_ps2.h"
 #include "driver/gfx.h"
@@ -26,7 +26,7 @@ int width, height;
 
 void draw_triangle(const float triangle[4][3]);
 
-static int should_exit = 0;
+static int should_exit;
 static void update_key_callback(unsigned char keycode, char is_released)
 {
   should_exit = SCANCODE_LCTRL == keycode;
@@ -36,13 +36,14 @@ void spinning_donut_demo()
 {
   width = _gfx.width;
   height = _gfx.height;
-  depth_buffer = kalloc(sizeof(float) * width * height, 0);
+  depth_buffer = allocator_malloc(sizeof(float) * width * height);
 	view = mat4_lookat_lh(view_pos, vec3_zero(), (vec3_t){0, 1, 0});
 	proj = mat4_perspective(deg_to_rad(70), (float) width / height, NEAR, FAR);
 
   kb_set_callback(update_key_callback);
   timer_stop();
   timer_start(60);
+  should_exit = 0;
 
   unsigned long ticks_prev = timer_get_elapsed();
   
@@ -66,6 +67,7 @@ void spinning_donut_demo()
     }
     gfx_flush();
   }
+  allocator_free(depth_buffer);
   printf("[INFO] Exited out of spinning donut loop\n");
 }
 

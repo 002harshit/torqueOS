@@ -56,4 +56,5 @@ void ramfs_test()
   printf("> data: %s\n", ramfs_get_data(fs, file2));
 
   printf("--- RAMFS test end\n");
+  ramfs_destroy(&fs);
 }
