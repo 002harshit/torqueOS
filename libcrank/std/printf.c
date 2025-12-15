@@ -102,7 +102,7 @@ void printf(const char* fmt, ...)
           print_int64(arg, 10);
         } else if (p[0] == 'x' || p[0] == 'X') {
           unsigned long long arg = va_arg(va, unsigned long long);
-          const char* hex_symbols =  p[1] == 'x' ? "0123456789abcdef" : "0123456789ABCDEF";
+          const char* hex_symbols =  p[0] == 'x' ? "0123456789abcdef" : "0123456789ABCDEF";
           puts("0x");
           print_hex64(arg, hex_symbols);
         } else if (p[0] == 'b') {
