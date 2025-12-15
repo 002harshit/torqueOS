@@ -10,13 +10,16 @@ typedef struct {
   unsigned long long end;
 } mem_region_t;
 
-typedef struct {
-  unsigned long long addr, len;
+enum {
+  MEM_BLOCK_FREE = 0b0,
+  MEM_BLOCK_USED = 0b1,
+  MEM_BLOCK_RESTRICTED = 0b11
+};
+typedef unsigned int mem_block_state_t;
 
-  // INFO: i can easily pack these booleans in a single byte to space
-  // but it might not work when defining linear array of them due to alignment issues
-  // another solution would be to use 'struct of array' instead of 'array of struct' but it will introduce complexity
-  int is_used, is_restricted;
+typedef struct {
+  unsigned int addr, len;
+  mem_block_state_t state;
 } mem_block_t;
 
 typedef struct {

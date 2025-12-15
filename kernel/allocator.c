@@ -8,8 +8,8 @@ mem_allocator_t _kallocator;
 static inline int find_best_fit(mem_allocator_t* allo, unsigned int size)
 {
   int best = -1;
-  for (int b = 0; b < allo->blocks_len; b++) {
-    if (allo->blocks[b].is_used) {
+  for (unsigned int b = 0; b < allo->blocks_len; b++) {
+    if (allo->blocks[b].state != MEM_BLOCK_FREE) {
       continue;
     }
     if (allo->blocks[b].len >= size) {
@@ -39,8 +39,8 @@ static void* malloc_unsafe(mem_allocator_t* allo, unsigned int size)
     splitted_len /= 2;
   }
 
-  mem_block_t block_a = {.addr = allo->blocks[best].addr, .len = allo->blocks[best].len - splitted_len, .is_used = 0, .is_restricted = 0};
-  mem_block_t block_b = {.addr = block_a.addr + block_a.len, .len = splitted_len, .is_used = 1, .is_restricted = 0};
+  mem_block_t block_a = {.addr = allo->blocks[best].addr, .len = allo->blocks[best].len - splitted_len, .state = MEM_BLOCK_FREE};
+  mem_block_t block_b = {.addr = block_a.addr + block_a.len, .len = splitted_len, .state = MEM_BLOCK_USED};
   if (block_a.len == 0) {
     allo->blocks[best] = block_b;
   } else {
@@ -55,7 +55,8 @@ static inline int find_block_from_ptr(mem_allocator_t* allo, void* ptr)
 {
   for (unsigned int b = 0; b < allo->blocks_len; b++) {
     if (allo->blocks[b].addr == (unsigned int) ptr) {
-      if (allo->blocks[b].is_restricted) return -1;
+      if (allo->blocks[b].state == MEM_BLOCK_RESTRICTED)
+        return -1;
       return b;
     }
   }
@@ -74,13 +75,13 @@ static inline void free_region_pages(mem_allocator_t* allo, int freed_index)
       continue;
     }
     mem_block_t block = allo->blocks[i];
-    if (fblock.addr == block.addr + block.len && !block.is_used) {
+    if (fblock.addr == block.addr + block.len && block.state == MEM_BLOCK_FREE) {
       unsigned int new_addr = (paddr_start) & ~(FRAME_SIZE - 1);
       if (new_addr >= block.addr) {
         paddr_start  = new_addr;
       }
     }
-    if (fblock.addr + fblock.len == block.addr && !block.is_used) {
+    if (fblock.addr + fblock.len == block.addr && block.state == MEM_BLOCK_FREE) {
       unsigned int new_addr = (paddr_end + FRAME_SIZE - 1) & ~(FRAME_SIZE - 1);
       if (new_addr <= block.addr + block.len) {
         paddr_end = new_addr;
@@ -98,8 +99,8 @@ static int free_unsafe(mem_allocator_t* allo, void* ptr)
 {
   int bidx = find_block_from_ptr(allo, ptr);
   if (bidx > -1) {
-    if (allo->blocks[bidx].is_used) {
-      allo->blocks[bidx].is_used = 0;
+    if (allo->blocks[bidx].state != MEM_BLOCK_FREE) {
+      allo->blocks[bidx].state = MEM_BLOCK_FREE;
       free_region_pages(allo, bidx);
       return bidx;
     }
@@ -113,7 +114,7 @@ static void* realloc_unsafe(mem_allocator_t* allo, void* ptr, unsigned int size)
   if (bidx < 0) {
     return NULL;
   }
-  if (!allo->blocks[bidx].is_used) {
+  if (!allo->blocks[bidx].state != MEM_BLOCK_FREE) {
     return NULL;
   }
   if (allo->blocks[bidx].len > size) {
@@ -188,7 +189,7 @@ void allocator_init(struct multiboot_tag_mmap* mmap_tag, mem_region_t* used_regi
   }
 
   printf("[INFO] ram region len: %d\n", ram_regions_len);
-  for (int i = 0; i < ram_regions_len; i++) {
+  for (unsigned int i = 0; i < ram_regions_len; i++) {
     printf("> ram_region[%d] %lu -> %lu\n", i, ram_regions[i].start, ram_regions[i].end);
   }
 
@@ -202,18 +203,18 @@ void allocator_init(struct multiboot_tag_mmap* mmap_tag, mem_region_t* used_regi
       }
     }
   }
-  for (int ui = 0; ui < used_regions_len; ui++) {
+  for (unsigned int ui = 0; ui < used_regions_len; ui++) {
     unsigned long long paddr_start = used_regions[ui].start;
     unsigned long long paddr_end = used_regions[ui].end;
-    blocks[blocks_len++] = (mem_block_t) {.addr = used_regions[ui].start, .len = used_regions[ui].end - used_regions[ui].start, .is_used = 1};
+    blocks[blocks_len++] = (mem_block_t) {.addr = used_regions[ui].start, .len = used_regions[ui].end - used_regions[ui].start, .state = MEM_BLOCK_RESTRICTED};
     paging_map_region(paddr_start, paddr_end, 1, 1);
   }
 
-  for (int ri = 0; ri < ram_regions_len; ri++) {
+  for (unsigned int ri = 0; ri < ram_regions_len; ri++) {
     unsigned long long kaddr = ram_regions[ri].start;
     while (kaddr < ram_regions[ri].end && kaddr < MAX_32BIT_ADDRESS) {
       int uidx = -1;
-      for (int ui = 0; ui < used_regions_len; ui++) {
+      for (unsigned int ui = 0; ui < used_regions_len; ui++) {
         if (!(ram_regions[ri].end <= used_regions[ui].start || used_regions[ui].end <= kaddr)) {
           if (uidx == -1 || used_regions[ui].start < used_regions[uidx].start) {
             uidx = ui;
@@ -222,16 +223,16 @@ void allocator_init(struct multiboot_tag_mmap* mmap_tag, mem_region_t* used_regi
       }
       if (uidx == -1) {
         if (ram_regions[ri].end > MAX_32BIT_ADDRESS) {
-          blocks[blocks_len++] = (mem_block_t) {.addr = kaddr, .len = MAX_32BIT_ADDRESS - kaddr, .is_used = 0};
+          blocks[blocks_len++] = (mem_block_t) {.addr = kaddr, .len = MAX_32BIT_ADDRESS - kaddr, .state = MEM_BLOCK_FREE};
           kaddr = MAX_32BIT_ADDRESS;
         } else {    
-          blocks[blocks_len++] = (mem_block_t) {.addr = kaddr, .len = ram_regions[ri].end - kaddr, .is_used = 0};
+          blocks[blocks_len++] = (mem_block_t) {.addr = kaddr, .len = ram_regions[ri].end - kaddr, .state = MEM_BLOCK_FREE};
           kaddr = ram_regions[ri].end;
         }
       } else if (used_regions[uidx].start <= kaddr) {
         kaddr = used_regions[uidx].end;
       } else {
-        blocks[blocks_len++] = (mem_block_t) {.addr = kaddr, .len = (used_regions[uidx].start - kaddr), .is_used = 0};
+        blocks[blocks_len++] = (mem_block_t) {.addr = kaddr, .len = (used_regions[uidx].start - kaddr), .state = MEM_BLOCK_FREE};
         kaddr = used_regions[uidx].end;
       }
     }
@@ -240,7 +241,7 @@ void allocator_init(struct multiboot_tag_mmap* mmap_tag, mem_region_t* used_regi
   mem_allocator_t tmp_allo = {.blocks = &blocks[0], .blocks_cap = blocks_cap, .blocks_len = blocks_len};
 
   mem_block_t* new_blocks = malloc_unsafe(&tmp_allo, blocks_cap * sizeof(mem_block_t));
-  for (int i = 0; i < blocks_len; i++) {
+  for (unsigned int i = 0; i < blocks_len; i++) {
     new_blocks[i] = blocks[i];
   }
 
