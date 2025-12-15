@@ -84,7 +84,6 @@ qemu: $(TARGET).iso
 		-smp 2 \
 		-boot d \
 		-cdrom $(TARGET).iso \
-		-display sdl,show-cursor=on \
 		-serial mon:stdio
 
 qemu_x86_64: $(TARGET).iso
@@ -93,7 +92,6 @@ qemu_x86_64: $(TARGET).iso
 		-smp 2 \
 		-boot d \
 		-cdrom $(TARGET).iso \
-		-display sdl,show-cursor=on \
 		-serial mon:stdio \
 		-smbios type=0,uefi=on -bios OVMF_BIOS.fd
 
