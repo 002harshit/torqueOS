@@ -1,6 +1,5 @@
 #include "../std.h"
 
-
 extern void putchar(char c);
 
 void puts(char* buf)
@@ -25,13 +24,47 @@ static void print_int(unsigned int v, int base)
   }
 }
 
+// INFO: when using -O0 optimizations, compiler tries to call __udivdi3 and __umoddi3 which are libgcc functions
+// it occurs when we try to divide 64bit ints
+// we did not support libgcc therefore we need to avoid native '/' and '%' operators ie for 64bit dividions when compiling for i386
+static inline unsigned long long custom_divi386(unsigned long long dividend, unsigned long long divisor, unsigned long long *rem)
+{
+  unsigned long long quo = 0;
+  if (divisor == 0) {
+    *rem = 0;
+    return quo;
+  }
+
+  // INFO: this would be naive way to implement division, ie very slow for large numbers
+  // im leaving this commented in case our current implementation fails
+  // while (dividend > divisor) {
+  //  dividend -= divisor;
+  //  quo++;
+  // }
+  // *rem = dividend;
+
+  unsigned long long r = 0;
+  for (int i = 63; i >= 0; i--) {
+    r = (r << 1) | ((dividend >> i) & 1ULL);
+    if (r >= divisor) {
+      r -= divisor;
+      quo |= (1ULL << i);
+    }
+  }
+
+  *rem = r;
+  return quo;
+}
+
+
 static void print_int64(unsigned long long v, int base)
 {
   char buffer[72];
   int len = 0;
   do {
-    buffer[len++] = '0' + (v % base);
-    v = v / base;
+    unsigned long long rem;
+    v = custom_divi386(v, base, &rem);
+    buffer[len++] = '0' + (rem);
   } while(v > 0);
   for (int i = len-1; i > -1; i--) {
     putchar(buffer[i]);
