@@ -26,6 +26,8 @@ int width, height;
 
 void draw_triangle(const float triangle[4][3]);
 
+static gfx_buffer_t gbuf;
+
 static int should_exit;
 static void update_key_callback(unsigned char keycode, char is_released)
 {
@@ -34,8 +36,9 @@ static void update_key_callback(unsigned char keycode, char is_released)
 
 void spinning_donut_demo()
 {
-  width = _gfx.width;
-  height = _gfx.height;
+  width = _gfx.buffer.width;
+  height = _gfx.buffer.height;
+  gbuf = gfx_buffer_create(width, height);
   depth_buffer = allocator_malloc(sizeof(float) * width * height);
 	view = mat4_lookat_lh(view_pos, vec3_zero(), (vec3_t){0, 1, 0});
 	proj = mat4_perspective(deg_to_rad(70), (float) width / height, NEAR, FAR);
@@ -54,7 +57,7 @@ void spinning_donut_demo()
     ticks_prev = ticks_now;
 
     angle += 2 * delta_ms;
-    gfx_clear(bg_color);
+    gfx_buffer_clear(gbuf, bg_color);
     for (int k = 0; k < width * height; k++)
       depth_buffer[k] = 1000000;
     model = mat4_rotate_axis((vec3_t){1, 1, 1}, angle);
@@ -65,9 +68,12 @@ void spinning_donut_demo()
     for (size_t i = 0; i < (size_t)torus_triangles_count; i++) {
       draw_triangle(torus_data[i]);
     }
+    gfx_buffer_blit(gbuf);
     gfx_flush();
   }
+  gfx_buffer_destroy(&gbuf);
   allocator_free(depth_buffer);
+  timer_stop();
   printf("[INFO] Exited out of spinning donut loop\n");
 }
 
@@ -92,7 +98,7 @@ static inline void _bresenham_low(vec2_t p0, vec2_t p1, gfx_color_t color)
   float D = (2 * d.y) - d.x;
   float y = p0.y;
   for (float x=p0.x;x< p1.x;x++) {
-    gfx_setpixel((int)x, (int)y, color);
+    gfx_buffer_setpixel(gbuf, (int)x, (int)y, color);
     if (D > 0) {
       y = y + yi;
       D = D + (2 * (d.y - d.x));
@@ -113,7 +119,7 @@ static inline void _bresenham_high(vec2_t p0, vec2_t p1, gfx_color_t color)
   float D = (2 * d.x) - d.y;
   float x = p0.x;
   for (float y=p0.y; y < p1.y; y++) {
-    gfx_setpixel((int)x, (int)y, color);
+    gfx_buffer_setpixel(gbuf, (int)x, (int)y, color);
     if (D > 0) {
       x = x + xi;
       D = D + (2 * (d.x - d.y));
@@ -184,7 +190,7 @@ void blit_triangle(vec3_t a, vec3_t b, vec3_t c, vec3_t verts[3], vec3_t verts_c
       gfx_color_t color = {v_color.x, v_color.y, v_color.z};
 
       depth_buffer[y * width + x] = depth;
-      gfx_setpixel(x, y, color);
+      gfx_buffer_setpixel(gbuf, x, y, color);
     }
   }
 }
@@ -251,7 +257,7 @@ void draw_triangle(const float triangle[4][3])
         v_color = vec3_add(v_color, vec3_mulv(verts_color[2], bary.z));
         v_color = vec3_mulv(v_color, 255);
         gfx_color_t color = {v_color.x, v_color.y, v_color.z};
-        gfx_setpixel(x, y, color);
+        gfx_buffer_setpixel(gbuf, x, y, color);
       }
     }
   }

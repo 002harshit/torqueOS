@@ -103,13 +103,12 @@ void kmain(unsigned int magic_number, multiboot_info_t* mbi)
 
   ramfs_test();
 
-  timer_start(62);
   spinning_donut_demo();
-  timer_stop();
 
   cursor_demo();
+  printf("out of cursor demo\n");
 
-  gfx_close();
+  gfx_destroy();
 
   // we don't want to get out of kmain so Kernel can listen to i/o events or interrupts
   while(1) {}

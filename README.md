@@ -6,7 +6,7 @@
 - [ ] Implement USB Driver for keyboard and mouse
 - [ ] Trap/Exception Handler
 - [x] RAMFS
-- [ ] Memory Management (malloc, free)
+- [x] Memory Management (malloc, free)
 - [ ] Multithreaded kernel
 - [ ] Filesystem Support
 

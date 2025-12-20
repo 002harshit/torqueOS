@@ -11,6 +11,7 @@ volatile float cursor_y = 255;
 
 // TODO: add keyboard controls to increase/decrease the mouse sensitivity
 static float sensitivity = 1;
+
 static void cursor_cb(mouse_packet_t p)
 {
   // INFO: can be casted like this as signed data is stored in 2's complement
@@ -24,24 +25,21 @@ static void cursor_cb(mouse_packet_t p)
 
 void cursor_demo()
 {
+  gfx_buffer_t gbuf = gfx_buffer_create(_gfx.buffer.width, _gfx.buffer.height);
   mouse_set_callback(cursor_cb);
   gfx_color_t c = {200, 30, 70};
   while (1) {
     gfx_color_t bg = {90, 250, 220};
-    for (int j = 0; j < _gfx.height; j++) {
-      for (int i = 0; i < _gfx.width; i++) {
-        gfx_setpixel(i, j, bg);
-      }
-    }
-
+    gfx_buffer_clear(gbuf, bg);
     prev_x += (cursor_x - prev_x) * 1;
     prev_y += (cursor_y - prev_y) * 1;
-    for (int j = (int)prev_y; j < _gfx.height && j < (int)prev_y + 20; j++) {
-      for (int i = (int)prev_x; i < _gfx.width && i < (int)prev_x + 20; i++) {
-        if (i < 0 || j < 0 || i >= _gfx.width || j >= _gfx.height) continue;
-        gfx_setpixel(i, j, c);
+    for (float j = prev_y; j <  prev_y + 20; j++) {
+      for (float i = prev_x; i < prev_x + 20; i++) {
+        gfx_buffer_setpixel(gbuf, i, j, c);
       }
     }
+    gfx_buffer_blit(gbuf);
     gfx_flush();
- }
+  }
+  gfx_buffer_destroy(&gbuf);
 }
